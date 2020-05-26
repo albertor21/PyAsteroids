@@ -1,0 +1,115 @@
+ 
+# Módulos
+import sys, pygame
+from pygame.locals import *
+ 
+# Constantes
+WIDTH = 800
+HEIGHT = 600
+ 
+# Clases
+# ---------------------------------------------------------------------
+ 
+class Ship(pygame.sprite.Sprite):
+    def __init__(self, filename, speed, frames, once, index, frame, done = False):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = load_image(filename, True)
+        self.rect = self.image.get_rect()
+        self.pos = (0,0)
+        self.rect.centerx = WIDTH / 2
+        self.rect.centery = HEIGHT / 2
+        self.speed = [0.5, -0.5]
+        self.frames = frames
+        self.once = once
+        self.done = done
+        self.index = index
+        self.frame = frame
+    #añadido para dibujar un solo frame a eleccion con el metodo setFrame(frame)
+    
+    def render(self, screen):
+
+    #var frame;
+    #    if (this.speed > 0) {
+    #      var max = this.frames.length;
+    #      var idx = Math.floor(this._index);
+    #      frame = this.frames[idx % max];
+    #      if (this.once && idx >= max) {
+    #        this.done = true;
+    #        return;
+    #      }
+    #    } else {
+    #      frame = this._frame;
+    #    }
+
+    #    var x = this.pos[0];
+    #    var y = this.pos[1];
+    #    var w = this.size[0];
+    #    var h = this.size[1];
+
+    #    if (this.dir == 'vertical') {
+    #      y += frame * this.size[1];
+    #    } else {
+    #      x += frame * this.size[0];
+    #    }
+
+        screen.blit(self.image, (30,30) )
+        
+          
+    
+ 
+# ---------------------------------------------------------------------
+ 
+# Funciones
+# ---------------------------------------------------------------------
+ 
+def load_image(filename, transparent=False):
+        try: 
+            image = pygame.image.load(filename).convert_alpha()
+        except pygame.error as message:   
+            print("Cannot load image: " + filename)
+            raise SystemExit(message) 
+             
+        if transparent:
+                color = image.get_at((0,0))
+                image.set_colorkey(color, RLEACCEL)
+        return image
+ 
+# ---------------------------------------------------------------------
+ 
+def main():
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    pygame.display.set_caption("Pruebas PyAsteroids")
+ 
+    background_image = load_image('sprites/background-orig.png')
+    scrolling_bg_image = load_image('sprites/scroll_bg.png', True)
+    back_rect = scrolling_bg_image.get_rect()
+    ship = Ship('sprites/ship.png', 0.5, 10, True, 0, 0)
+    
+ 
+    clock = pygame.time.Clock()
+    screen.blit(background_image, (0, 0))
+   
+    while True:
+        time = clock.tick(60)
+        for eventos in pygame.event.get():
+            if eventos.type == QUIT:
+                sys.exit(0)
+
+
+        screen.blit(scrolling_bg_image, back_rect)
+        #copy of the background      
+        screen.blit(scrolling_bg_image, back_rect.move(back_rect.width, 0))
+        # we want a scrolling background, so we just move the position rect
+        back_rect.move_ip(-1, 0)
+        # it the right edge of the "left" image is zero, that means it's fully out of view
+        if back_rect.right == 0:
+            back_rect.x = 0
+
+        
+        screen.blit(ship.image, (30,30) )
+        pygame.display.flip()
+    return 0
+ 
+if __name__ == '__main__':
+    pygame.init()
+    main()
