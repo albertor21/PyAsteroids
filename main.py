@@ -52,11 +52,8 @@ class Ship(pygame.sprite.Sprite):
     #      x += frame * this.size[0];
     #    }
 
-        screen.blit(self.image, (30,30) )
+        screen.blit(self.image, (0,0) )
         
-          
-    
- 
 # ---------------------------------------------------------------------
  
 # Funciones
@@ -65,10 +62,11 @@ class Ship(pygame.sprite.Sprite):
 def load_image(filename, transparent=False):
         try: 
             image = pygame.image.load(filename).convert_alpha()
+            #image = pygame.image.load(filename).convert()
         except pygame.error as message:   
             print("Cannot load image: " + filename)
             raise SystemExit(message) 
-             
+    
         if transparent:
                 color = image.get_at((0,0))
                 image.set_colorkey(color, RLEACCEL)
@@ -80,8 +78,8 @@ def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Pruebas PyAsteroids")
  
-    background_image = load_image('sprites/background-orig.png')
-    scrolling_bg_image = load_image('sprites/scroll_bg.png', True)
+    background_image = load_image('sprites/background.png')
+    scrolling_bg_image = load_image('sprites/scroll_bg.png')
     back_rect = scrolling_bg_image.get_rect()
     ship = Ship('sprites/ship.png', 0.5, 10, True, 0, 0)
     
@@ -90,24 +88,30 @@ def main():
     screen.blit(background_image, (0, 0))
    
     while True:
-        time = clock.tick(60)
+        time = clock.tick(30)
         for eventos in pygame.event.get():
             if eventos.type == QUIT:
                 sys.exit(0)
-
-
-        screen.blit(scrolling_bg_image, back_rect)
-        #copy of the background      
-        screen.blit(scrolling_bg_image, back_rect.move(back_rect.width, 0))
-        # we want a scrolling background, so we just move the position rect
+        
+        #draw background
+        screen.blit(background_image, (0, 0))
+        
+        #scrolling background
+        screen.blit(scrolling_bg_image, back_rect) 
+        screen.blit(scrolling_bg_image, back_rect.move(back_rect.width, 0)) 
         back_rect.move_ip(-1, 0)
-        # it the right edge of the "left" image is zero, that means it's fully out of view
         if back_rect.right == 0:
             back_rect.x = 0
 
         
-        screen.blit(ship.image, (30,30) )
+        #draw ship
+        #screen.blit(ship.render(), (0,0) )
+        ship.render(screen)
+        #screen.blit(ship.image, (0,0) )
+
+        #update screen
         pygame.display.flip()
+        
     return 0
  
 if __name__ == '__main__':
