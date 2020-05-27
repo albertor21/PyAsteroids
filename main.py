@@ -1,60 +1,15 @@
- 
+
 # Módulos
 import sys, pygame
+import ship
 from pygame.locals import *
+
  
 # Constantes
 WIDTH = 800
 HEIGHT = 600
  
-# Clases
-# ---------------------------------------------------------------------
- 
-class Ship(pygame.sprite.Sprite):
-    def __init__(self, filename, speed, frames, once, index, frame, done = False):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = load_image(filename, True)
-        self.rect = self.image.get_rect()
-        self.pos = (0,0)
-        self.rect.centerx = WIDTH / 2
-        self.rect.centery = HEIGHT / 2
-        self.speed = [0.5, -0.5]
-        self.frames = frames
-        self.once = once
-        self.done = done
-        self.index = index
-        self.frame = frame
-    #añadido para dibujar un solo frame a eleccion con el metodo setFrame(frame)
-    
-    def render(self, screen):
 
-    #var frame;
-    #    if (this.speed > 0) {
-    #      var max = this.frames.length;
-    #      var idx = Math.floor(this._index);
-    #      frame = this.frames[idx % max];
-    #      if (this.once && idx >= max) {
-    #        this.done = true;
-    #        return;
-    #      }
-    #    } else {
-    #      frame = this._frame;
-    #    }
-
-    #    var x = this.pos[0];
-    #    var y = this.pos[1];
-    #    var w = this.size[0];
-    #    var h = this.size[1];
-
-    #    if (this.dir == 'vertical') {
-    #      y += frame * this.size[1];
-    #    } else {
-    #      x += frame * this.size[0];
-    #    }
-
-        screen.blit(self.image, (0,0) )
-        
-# ---------------------------------------------------------------------
  
 # Funciones
 # ---------------------------------------------------------------------
@@ -76,12 +31,12 @@ def load_image(filename, transparent=False):
  
 def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("Pruebas PyAsteroids")
+    pygame.display.set_caption("PyAsteroids")
  
-    background_image = load_image('sprites/background.png')
+    background_image = load_image('sprites/background-orig.png')
     scrolling_bg_image = load_image('sprites/scroll_bg.png')
     back_rect = scrolling_bg_image.get_rect()
-    ship = Ship('sprites/ship.png', 0.5, 10, True, 0, 0)
+    myShip = ship.Ship('sprites/ship.png', 0.5, 10, True, 0, 0)
     
  
     clock = pygame.time.Clock()
@@ -106,8 +61,8 @@ def main():
         
         #draw ship
         #screen.blit(ship.render(), (0,0) )
-        ship.render(screen)
-        #screen.blit(ship.image, (0,0) )
+        rectangle = (80,0,80,64)
+        screen.blit(myShip.render(rectangle), (0,0) )
 
         #update screen
         pygame.display.flip()
