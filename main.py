@@ -1,6 +1,6 @@
  
 # Módulos
-import sys, pygame
+import sys, pygame, os
 from pygame.locals import *
  
 # Constantes
@@ -9,25 +9,22 @@ HEIGHT = 600
  
 # Clases
 # ---------------------------------------------------------------------
- 
-class Ship(pygame.sprite.Sprite):
+class SpriteSheet(pygame.sprite.Sprite):
     def __init__(self, filename, speed, frames, once, index, frame, done = False):
         pygame.sprite.Sprite.__init__(self)
         self.image = load_image(filename, True)
-        self.rect = self.image.get_rect()
-        self.pos = (0,0)
+        self.rect = self.image.get_rect()      
         self.rect.centerx = WIDTH / 2
         self.rect.centery = HEIGHT / 2
-        self.speed = [0.5, -0.5]
-        self.frames = frames
+        self.frames = frames #number of frames
         self.once = once
         self.done = done
-        self.index = index
-        self.frame = frame
-    #añadido para dibujar un solo frame a eleccion con el metodo setFrame(frame)
-    
+        self.frame = frame #current frame
+        self.frameW = self.rect.width /frames
+        self.frameH = self.rect.height
+        
     def render(self, screen):
-
+    
     #var frame;
     #    if (this.speed > 0) {
     #      var max = this.frames.length;
@@ -45,32 +42,36 @@ class Ship(pygame.sprite.Sprite):
     #    var y = this.pos[1];
     #    var w = this.size[0];
     #    var h = this.size[1];
-
-    #    if (this.dir == 'vertical') {
-    #      y += frame * this.size[1];
-    #    } else {
-    #      x += frame * this.size[0];
-    #    }
-
-        screen.blit(self.image, (0,0) )
+        rect_frame = x,self.frame *,self.frameW, self.frameH
+        screen.blit(self.image, (0,0), rect_frame )
+    
+    def update(self, dt):  
+        if self.speed > 0:
+            _frame = self.frame
+            _frame = _frame  + (self.speed * dt)
+            _frame = _frame % self.frames
+            self.frame = _frame
         
+
+             
 # ---------------------------------------------------------------------
  
 # Funciones
 # ---------------------------------------------------------------------
  
 def load_image(filename, transparent=False):
-        try: 
-            image = pygame.image.load(filename).convert_alpha()
-            #image = pygame.image.load(filename).convert()
-        except pygame.error as message:   
-            print("Cannot load image: " + filename)
-            raise SystemExit(message) 
+    try: 
+        filename = os.path.join (sys.path[0], filename)
+        image = pygame.image.load(filename).convert_alpha()
+        #image = pygame.image.load(filename).convert()
+    except pygame.error as message:   
+        print("Cannot load image: " + filename)
+        raise SystemExit(message) 
     
-        if transparent:
-                color = image.get_at((0,0))
-                image.set_colorkey(color, RLEACCEL)
-        return image
+    if transparent:
+        color = image.get_at((0,0))
+        image.set_colorkey(color, RLEACCEL)
+    return image
  
 # ---------------------------------------------------------------------
  
