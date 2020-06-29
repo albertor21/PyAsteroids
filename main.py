@@ -1,11 +1,6 @@
 
 # Módulos
-<<<<<<< HEAD
 import sys, pygame, os
-=======
-import sys, pygame
-import ship
->>>>>>> 8bbee158b1b7bef7041e2275263f9752fbcba509
 from pygame.locals import *
 
  
@@ -13,11 +8,17 @@ from pygame.locals import *
 WIDTH = 800
 HEIGHT = 600
  
-<<<<<<< HEAD
 # Clases
 # ---------------------------------------------------------------------
 class SpriteSheet(pygame.sprite.Sprite):
-    def __init__(self, filename, speed, frames, once, index, frame, done = False):
+    '''
+    filename : name of the sprite sheet image file
+    speed : framerate ( if 0 display current frame)
+    frames : list of number frames
+    once: display anim once
+    done: anim terminated
+    '''
+    def __init__(self, filename, speed, frames, once, frame, done = False):
         pygame.sprite.Sprite.__init__(self)
         self.image = load_image(filename, True)
         self.rect = self.image.get_rect()      
@@ -26,31 +27,15 @@ class SpriteSheet(pygame.sprite.Sprite):
         self.frames = frames #number of frames
         self.once = once
         self.done = done
-        self.frame = frame #current frame
+        self.frame = frame #current frame (zero-based)
         self.frameW = self.rect.width /frames
         self.frameH = self.rect.height
-        
-    def render(self, screen):
-    
-    #var frame;
-    #    if (this.speed > 0) {
-    #      var max = this.frames.length;
-    #      var idx = Math.floor(this._index);
-    #      frame = this.frames[idx % max];
-    #      if (this.once && idx >= max) {
-    #        this.done = true;
-    #        return;
-    #      }
-    #    } else {
-    #      frame = this._frame;
-    #    }
+        self.surface = pygame.Surface
 
-    #    var x = this.pos[0];
-    #    var y = this.pos[1];
-    #    var w = this.size[0];
-    #    var h = this.size[1];
-        rect_frame = x,self.frame *,self.frameW, self.frameH
-        screen.blit(self.image, (0,0), rect_frame )
+    def render(self, screen):
+        rect_frame = (self.frame * self.frameW , 0, self.frameW, self.frameH)
+        self.surface.blit(self.image, (0,0), (0,0,50,50) )
+        return self.surface
     
     def update(self, dt):  
         if self.speed > 0:
@@ -59,12 +44,8 @@ class SpriteSheet(pygame.sprite.Sprite):
             _frame = _frame % self.frames
             self.frame = _frame
         
-
-             
+          
 # ---------------------------------------------------------------------
-=======
-
->>>>>>> 8bbee158b1b7bef7041e2275263f9752fbcba509
  
 # Funciones
 # ---------------------------------------------------------------------
@@ -92,9 +73,9 @@ def main():
     background_image = load_image('sprites/background-orig.png')
     scrolling_bg_image = load_image('sprites/scroll_bg.png')
     back_rect = scrolling_bg_image.get_rect()
-    myShip = ship.Ship('sprites/ship.png', 0.5, 10, True, 0, 0)
+    #myShip = ship.Ship('sprites/ship.png', 0.5, 10, True, 0, 0)
+    myShip = SpriteSheet('sprites/ship.png', 0, 2, True, True)
     
- 
     clock = pygame.time.Clock()
     screen.blit(background_image, (0, 0))
    
@@ -116,7 +97,7 @@ def main():
 
         
         #draw ship
-        #screen.blit(ship.render(), (0,0) )
+        #screen.blit(myShip.render(), (0,0) )
         rectangle = (80,0,80,64)
         screen.blit(myShip.render(rectangle), (0,0) )
 
