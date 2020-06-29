@@ -1,12 +1,19 @@
- 
+
 # Módulos
+<<<<<<< HEAD
 import sys, pygame, os
+=======
+import sys, pygame
+import ship
+>>>>>>> 8bbee158b1b7bef7041e2275263f9752fbcba509
 from pygame.locals import *
+
  
 # Constantes
 WIDTH = 800
 HEIGHT = 600
  
+<<<<<<< HEAD
 # Clases
 # ---------------------------------------------------------------------
 class SpriteSheet(pygame.sprite.Sprite):
@@ -55,6 +62,9 @@ class SpriteSheet(pygame.sprite.Sprite):
 
              
 # ---------------------------------------------------------------------
+=======
+
+>>>>>>> 8bbee158b1b7bef7041e2275263f9752fbcba509
  
 # Funciones
 # ---------------------------------------------------------------------
@@ -77,12 +87,12 @@ def load_image(filename, transparent=False):
  
 def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("Pruebas PyAsteroids")
+    pygame.display.set_caption("PyAsteroids")
  
-    background_image = load_image('sprites/background.png')
+    background_image = load_image('sprites/background-orig.png')
     scrolling_bg_image = load_image('sprites/scroll_bg.png')
     back_rect = scrolling_bg_image.get_rect()
-    ship = Ship('sprites/ship.png', 0.5, 10, True, 0, 0)
+    myShip = ship.Ship('sprites/ship.png', 0.5, 10, True, 0, 0)
     
  
     clock = pygame.time.Clock()
@@ -107,8 +117,8 @@ def main():
         
         #draw ship
         #screen.blit(ship.render(), (0,0) )
-        ship.render(screen)
-        #screen.blit(ship.image, (0,0) )
+        rectangle = (80,0,80,64)
+        screen.blit(myShip.render(rectangle), (0,0) )
 
         #update screen
         pygame.display.flip()
