@@ -8,6 +8,7 @@ from pygame.locals import *
 # Constantes
 WIDTH = 800
 HEIGHT = 600
+
  
 # Clases
 # ---------------------------------------------------------------------
@@ -30,9 +31,10 @@ class SpriteSheet(pygame.sprite.Sprite):
         self.frames = frames #number of frames
         self.once = once
         self.done = False
+        self.frameW = int(self.rect.width /frames)
+        self.frameH = int (self.rect.height)
         self.frame = frame #current frame (zero-based)
-        self.frameW = self.rect.width /frames
-        self.frameH = self.rect.height
+        self.frameImage = pygame.Surface ((self.frameW, self.frameH), flags=SRCALPHA) #current image frame
         self.angle = 0
         
     def blitRotate(self, surf, image, pos, originPos, angle):
@@ -43,29 +45,33 @@ class SpriteSheet(pygame.sprite.Sprite):
         box_rotate = [p.rotate(angle) for p in box]
         min_box    = (min(box_rotate, key=lambda p: p[0])[0], min(box_rotate, key=lambda p: p[1])[1])
         max_box    = (max(box_rotate, key=lambda p: p[0])[0], max(box_rotate, key=lambda p: p[1])[1])
-
         # calculate the translation of the pivot 
-        pivot        = pygame.math.Vector2(originPos[0], -originPos[1])
-        pivot_rotate = pivot.rotate(angle)
+        pivot        = pygame.math.Vector2 (originPos[0], -originPos[1])
+        pivot_rotate = pivot.rotate (angle)
         pivot_move   = pivot_rotate - pivot
-
         # calculate the upper left origin of the rotated image
         origin = (pos[0] - originPos[0] + min_box[0] - pivot_move[0], pos[1] - originPos[1] - max_box[1] + pivot_move[1])
         # get a rotated image
         rotated_image = pygame.transform.rotate(image, angle)
         # rotate and blit the image
-        surf.blit(rotated_image, origin)
+        #####surf.blit(rotated_image, origin)
+        return rotated_image
         # draw rectangle around the image
-       # pygame.draw.rect (surf, (255, 0, 0), (*origin, *rotated_image.get_size()),2)
-        
+        #pygame.draw.rect (surf, (255, 0, 0), (*origin, *rotated_image.get_size()),2)     
 
     def render(self, screen):
         if not self.done:
             rect_frame = (self.frame * self.frameW , 0, self.frameW, self.frameH)
             if self.angle == 0:
-                screen.blit(self.image, (0,0), rect_frame )
+                self.frameImage.fill ((0,0,0,0))
+                self.frameImage.blit (self.image, (0,0), rect_frame)
+                #self.frameImage.convert_alpha()
             else:
-                self.blitRotate(screen, self.image, (300,300), (80,37), self.angle)
+                pass
+                #surf.blit (self.image, (0,0), rect_frame)
+                self.blitRotate(screen, self.image, (300,300), (40,37), self.angle)
+                #self.blitRotate(screen, surf, (300,300), (80,37), self.angle)
+        return self.frameImage
 
     def update(self, dt):  
         if self.speed > 0:
@@ -75,8 +81,6 @@ class SpriteSheet(pygame.sprite.Sprite):
                 self.done = True;
             _frame = _frame % self.frames
             self.frame = _frame
-
-    
           
 # ---------------------------------------------------------------------
  
@@ -97,10 +101,9 @@ def load_image(filename, transparent=False):
         image.set_colorkey(color, RLEACCEL)
     return image
 
-
-
 def texto(texto, posx, posy,  size, color=(255, 255, 255)):
-    fuente = pygame.font.Font('g:\\Python\\pygame\\images/DroidSans.ttf', size)
+    fontfile = os.path.join (sys.path[0], 'fonts/ledger-Regular.ttf')
+    fuente = pygame.font.Font(fontfile, size)
     salida = pygame.font.Font.render(fuente, texto, 1, color)
     salida_rect = salida.get_rect()
     salida_rect.centerx = posx
@@ -147,7 +150,7 @@ def main():
         if keys[K_n]:
             myShip.angle +=4
 
-    #########################draw area#############################
+    ##############################draw area#############################
         #draw background
         screen.blit(background_image, (0, 0))
         #scroll background
@@ -157,17 +160,18 @@ def main():
         if back_rect.right == 0:
             back_rect.x = 0
         #draw ship
-        myShip.render(screen)
-        explosion.render (screen)
+        ###myShip.render(screen)
+        screen.blit(myShip.render(screen), (0,0)) 
+        #explosion.render (screen)
         #draw fps text
-        fps, fps_rect = texto (str(int(clock.get_fps())), 400,10, 12)
+        fps, fps_rect = texto (str(int(clock.get_fps())), 400,10, 14)
         screen.blit(fps, fps_rect)
-        fps, fps_rect = texto (str(time), 500,10, 12)
+        fps, fps_rect = texto (str(time), 500,10, 14)
         screen.blit(fps, fps_rect)
-        fps, fps_rect = texto (str(debug), 700,10, 12)
+        fps, fps_rect = texto (str(debug), 700,10, 14)
         screen.blit(fps, fps_rect)
 
-    #######################update area#############################
+    ############################update area#############################
         myShip.update(time)
         explosion.update(time)
     #repaint
