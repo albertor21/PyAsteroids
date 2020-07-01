@@ -31,49 +31,54 @@ class SpriteSheet(pygame.sprite.Sprite):
         self.frames = frames #number of frames
         self.once = once
         self.done = False
-        self.frameW = int(self.rect.width /frames)
+        self.frameW = int(self.rect.width / frames)
         self.frameH = int (self.rect.height)
         self.frame = frame #current frame (zero-based)
         self.frameImage = pygame.Surface ((self.frameW, self.frameH), flags=SRCALPHA) #current image frame
         self.angle = 0
+        self.pos = (400,300)
+
+    def setFrame(self, frame):
+        self.frame = frame
+        self.frameImage = pygame.Surface ((self.frameW, self.frameH), flags=SRCALPHA)
         
-    def blitRotate(self, surf, image, pos, originPos, angle):
+    def blitRotate(self, screen, image, pos, originPos, angle):
         #https://stackoverflow.com/questions/4183208/how-do-i-rotate-an-image-around-its-center-using-pygame
-        # calculate the axis aligned bounding box of the rotated image
+        # calcaulate the axis aligned bounding box of the rotated image
         w, h       = image.get_size()
         box        = [pygame.math.Vector2(p) for p in [(0, 0), (w, 0), (w, -h), (0, -h)]]
         box_rotate = [p.rotate(angle) for p in box]
         min_box    = (min(box_rotate, key=lambda p: p[0])[0], min(box_rotate, key=lambda p: p[1])[1])
         max_box    = (max(box_rotate, key=lambda p: p[0])[0], max(box_rotate, key=lambda p: p[1])[1])
+
         # calculate the translation of the pivot 
-        pivot        = pygame.math.Vector2 (originPos[0], -originPos[1])
-        pivot_rotate = pivot.rotate (angle)
+        pivot        = pygame.math.Vector2(originPos[0], -originPos[1])
+        pivot_rotate = pivot.rotate(angle)
         pivot_move   = pivot_rotate - pivot
+
         # calculate the upper left origin of the rotated image
         origin = (pos[0] - originPos[0] + min_box[0] - pivot_move[0], pos[1] - originPos[1] - max_box[1] + pivot_move[1])
         # get a rotated image
         rotated_image = pygame.transform.rotate(image, angle)
         # rotate and blit the image
-        #####surf.blit(rotated_image, origin)
-        return rotated_image
+        screen.blit(rotated_image, origin)
         # draw rectangle around the image
-        #pygame.draw.rect (surf, (255, 0, 0), (*origin, *rotated_image.get_size()),2)     
+        #pygame.draw.rect (screen, (255, 0, 0), (*origin, *rotated_image.get_size()),2)
 
     def render(self, screen):
         if not self.done:
             rect_frame = (self.frame * self.frameW , 0, self.frameW, self.frameH)
-            if self.angle == 0:
-                self.frameImage.fill ((0,0,0,0))
-                self.frameImage.blit (self.image, (0,0), rect_frame)
-                #self.frameImage.convert_alpha()
+            self.frameImage.fill ((0,0,0,0))
+            self.frameImage.blit (self.image, (0,0), rect_frame) 
+            if self.angle == 0:    
+                screen.blit (self.frameImage, self.pos)
             else:
-                pass
-                #surf.blit (self.image, (0,0), rect_frame)
-                self.blitRotate(screen, self.image, (300,300), (40,37), self.angle)
-                #self.blitRotate(screen, surf, (300,300), (80,37), self.angle)
-        return self.frameImage
+                cRenderImage = self.frameImage.copy()           
+                self.blitRotate(screen, cRenderImage, self.pos, (40,33), self.angle)
+               
+      
 
-    def update(self, dt):  
+    def update(self):  
         if self.speed > 0:
             _frame = self.frame
             _frame = _frame  + math.floor(self.speed )
@@ -120,10 +125,9 @@ def main():
     background_image = load_image('sprites/background-orig.png')
     scrolling_bg_image = load_image('sprites/scroll_bg.png')
     back_rect = scrolling_bg_image.get_rect()
-    #myShip = ship.Ship('sprites/ship.png', 0.5, 10, True, 0, 0)
+    explosionList= []
     myShip = SpriteSheet('sprites/ship.png', 0, 2, True, 0)
-    explosion = SpriteSheet('sprites/bigexplosion.png', 1, 24, True, 1)
-    debug = 0
+    explosion = SpriteSheet('sprites/bigexplosion.png', 3, 24, True, 1)
     
     clock = pygame.time.Clock()
     screen.blit(background_image, (0, 0))
@@ -138,17 +142,18 @@ def main():
         
             if eventos.type == pygame.KEYDOWN:
                 if eventos.key == pygame.K_q:   
-                    explosion = SpriteSheet('sprites/bigexplosion.png', 3
-                    , 24, True, 1)
-                if eventos.key == pygame.K_a:   
-                    myShip.frame = 1
+                    explosion = SpriteSheet('sprites/bigexplosion.png', 3, 24, True, 1)
+
             if eventos.type == pygame.KEYUP:
-                if eventos.key == pygame.K_a:     
-                    myShip.frame = 0
+                pass
+
+        myShip.setFrame(0)
         if keys[K_m]:
             myShip.angle -=4
         if keys[K_n]:
             myShip.angle +=4
+        if keys[K_a]:
+            myShip.setFrame(1)
 
     ##############################draw area#############################
         #draw background
@@ -160,20 +165,21 @@ def main():
         if back_rect.right == 0:
             back_rect.x = 0
         #draw ship
-        ###myShip.render(screen)
-        screen.blit(myShip.render(screen), (0,0)) 
-        #explosion.render (screen)
+        myShip.render(screen)
+        #screen.blit(myShip.render(), (400, 300)) 
+        explosion.render (screen)
+        #screen.blit(explosion.render(), (200, 300)) 
         #draw fps text
         fps, fps_rect = texto (str(int(clock.get_fps())), 400,10, 14)
         screen.blit(fps, fps_rect)
         fps, fps_rect = texto (str(time), 500,10, 14)
         screen.blit(fps, fps_rect)
-        fps, fps_rect = texto (str(debug), 700,10, 14)
+        fps, fps_rect = texto (str(myShip.frame), 700,10, 14)
         screen.blit(fps, fps_rect)
 
     ############################update area#############################
-        myShip.update(time)
-        explosion.update(time)
+        myShip.update()
+        explosion.update()
     #repaint
         pygame.display.flip()
         
