@@ -1,8 +1,9 @@
 
 # Módulos
 import sys, pygame, os
-import math
+
 from pygame.locals import *
+import spritesheet as sh
 
  
 # Constantes
@@ -12,91 +13,35 @@ HEIGHT = 600
  
 # Clases
 # ---------------------------------------------------------------------
-class SpriteSheet(pygame.sprite.Sprite):
+class Actor(pygame.sprite.Sprite):
     '''
-    filename : name of the sprite sheet image file
-    speed : framerate ( if 0 display current frame)
-    frames : number of frames
-    frame : frame to be display
-    once: display anim once
-    done: anim terminated
+    pos = posicion del sprite (x,y)
+    vel = vel del sprite (,x y)
+    acc = aceleracion del sprite
+    angle = angulo en grados
     '''
-    def __init__(self, filename, speed, frames, once, frame = 0):
+    def __init__(self, spritesheet, pos, vel, acc, angle):
         pygame.sprite.Sprite.__init__(self)
-        self.image = load_image(filename, True)
-        self.rect = self.image.get_rect()      
-        self.rect.centerx = WIDTH / 2
-        self.rect.centery = HEIGHT / 2
-        self.speed = speed
-        self.frames = frames #number of frames
-        self.once = once
-        self.done = False
-        self.frameW = int(self.rect.width / frames)
-        self.frameH = int (self.rect.height)
-        self.frame = frame #current frame (zero-based)
-        self.frameImage = pygame.Surface ((self.frameW, self.frameH), flags=SRCALPHA) #current image frame
-        self.angle = 0
-        self.pos = (400,300)
-
-    def setFrame(self, frame):
-        self.frame = frame
-        self.frameImage = pygame.Surface ((self.frameW, self.frameH), flags=SRCALPHA)
+        self.sprite = spritesheet
+        self._pos = pos
+        self._vel = vel
+        self.acc = acc
+        self.angle = angle
+    
+    def update():
         
-    def blitRotate(self, screen, image, pos, originPos, angle):
-        #https://stackoverflow.com/questions/4183208/how-do-i-rotate-an-image-around-its-center-using-pygame
-        # calcaulate the axis aligned bounding box of the rotated image
-        w, h       = image.get_size()
-        box        = [pygame.math.Vector2(p) for p in [(0, 0), (w, 0), (w, -h), (0, -h)]]
-        box_rotate = [p.rotate(angle) for p in box]
-        min_box    = (min(box_rotate, key=lambda p: p[0])[0], min(box_rotate, key=lambda p: p[1])[1])
-        max_box    = (max(box_rotate, key=lambda p: p[0])[0], max(box_rotate, key=lambda p: p[1])[1])
-
-        # calculate the translation of the pivot 
-        pivot        = pygame.math.Vector2(originPos[0], -originPos[1])
-        pivot_rotate = pivot.rotate(angle)
-        pivot_move   = pivot_rotate - pivot
-
-        # calculate the upper left origin of the rotated image
-        origin = (pos[0] - originPos[0] + min_box[0] - pivot_move[0], pos[1] - originPos[1] - max_box[1] + pivot_move[1])
-        # get a rotated image
-        rotated_image = pygame.transform.rotate(image, angle)
-        # rotate and blit the image
-        screen.blit(rotated_image, origin)
-        # draw rectangle around the image
-        #pygame.draw.rect (screen, (255, 0, 0), (*origin, *rotated_image.get_size()),2)
-
-    def render(self, screen):
-        if not self.done:
-            rect_frame = (self.frame * self.frameW , 0, self.frameW, self.frameH)
-            self.frameImage.fill ((0,0,0,0))
-            self.frameImage.blit (self.image, (0,0), rect_frame) 
-            if self.angle == 0:    
-                screen.blit (self.frameImage, self.pos)
-            else:
-                cRenderImage = self.frameImage.copy()           
-                self.blitRotate(screen, cRenderImage, self.pos, (40,33), self.angle)
-               
-      
-
-    def update(self):  
-        if self.speed > 0:
-            _frame = self.frame
-            _frame = _frame  + math.floor(self.speed )
-            if (self.once and _frame >= self.frames):
-                self.done = True;
-            _frame = _frame % self.frames
-            self.frame = _frame
-          
+    
+    def render():
+        pass
+     
 # ---------------------------------------------------------------------
  
 # Funciones
 # ---------------------------------------------------------------------
- 
 def load_image(filename, transparent=False):
     try: 
         filename = os.path.join (sys.path[0], filename)
         image = pygame.image.load(filename).convert_alpha()
-        #image = pygame.image.load(filename).convert()
     except pygame.error as message:   
         print("Cannot load image: " + filename)
         raise SystemExit(message) 
@@ -105,6 +50,7 @@ def load_image(filename, transparent=False):
         color = image.get_at((0,0))
         image.set_colorkey(color, RLEACCEL)
     return image
+
 
 def texto(texto, posx, posy,  size, color=(255, 255, 255)):
     fontfile = os.path.join (sys.path[0], 'fonts/ledger-Regular.ttf')
@@ -116,7 +62,7 @@ def texto(texto, posx, posy,  size, color=(255, 255, 255)):
     return salida, salida_rect
  
 # ---------------------------------------------------------------------
- 
+
 def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("PyAsteroids")
@@ -126,8 +72,8 @@ def main():
     scrolling_bg_image = load_image('sprites/scroll_bg.png')
     back_rect = scrolling_bg_image.get_rect()
     explosionList= []
-    myShip = SpriteSheet('sprites/ship.png', 0, 2, True, 0)
-    explosion = SpriteSheet('sprites/bigexplosion.png', 3, 24, True, 1)
+    myShip = sh.SpriteSheet('sprites/shipcuadrado.png', 0, 1, True, 0)
+    explosion = sh.SpriteSheet('sprites/bigexplosion.png', 3, 24, True, 1)
     
     clock = pygame.time.Clock()
     screen.blit(background_image, (0, 0))
@@ -140,14 +86,16 @@ def main():
                 sys.exit(0)
 
         
-            if eventos.type == pygame.KEYDOWN:
-                if eventos.key == pygame.K_q:   
-                    explosion = SpriteSheet('sprites/bigexplosion.png', 3, 24, True, 1)
+           #if eventos.type == pygame.KEYDOWN:
+           #    if eventos.key == pygame.K_q:   
+           #        explosion = SpriteSheet('sprites/bigexplosion.png', 3, 24, True, 1)
 
-            if eventos.type == pygame.KEYUP:
+           #if eventos.type == pygame.KEYUP:
                 pass
 
         myShip.setFrame(0)
+        if keys[K_q]:
+            myShip.vel = (1,1)
         if keys[K_m]:
             myShip.angle -=4
         if keys[K_n]:
@@ -174,7 +122,7 @@ def main():
         screen.blit(fps, fps_rect)
         fps, fps_rect = texto (str(time), 500,10, 14)
         screen.blit(fps, fps_rect)
-        fps, fps_rect = texto (str(myShip.frame), 700,10, 14)
+        fps, fps_rect = texto (str(myShip.angle), 700,10, 14)
         screen.blit(fps, fps_rect)
 
     ############################update area#############################
