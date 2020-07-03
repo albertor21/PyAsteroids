@@ -38,6 +38,11 @@ class SpriteSheet:
         self.frame = frame #current frame (zero-based)
         self.frameImage = pygame.Surface ((self.frameW, self.frameH), flags=SRCALPHA) #current image frame
         self.angle = 0
+        self.velRot = 0
+        self.pos = [0,0]
+        self.vel = [0,0]
+        self.acc = [0,0]
+
 
     def setFrame(self, frame):
         self.frame = frame
@@ -74,8 +79,10 @@ class SpriteSheet:
             if self.angle == 0:    
                 screen.blit (self.frameImage, self.pos)
             else:
-                cRenderImage = self.frameImage.copy()           
-                self.blitRotate(screen, cRenderImage, self.pos, (32,32), self.angle)
+                cRenderImage = self.frameImage.copy()  
+                centerSprite =  (self.frameW//2,  self.frameH//2 )
+                posRender = (self.pos[0] + centerSprite[0], self.pos[1]+ centerSprite[1] )    
+                self.blitRotate(screen, cRenderImage, posRender, centerSprite, self.angle)
                
     def update(self):  
         if self.speed > 0:
@@ -85,4 +92,5 @@ class SpriteSheet:
                 self.done = True;
             _frame = _frame % self.frames
             self.frame = _frame
-     
+        self.pos[0] = self.pos[0] + self.vel[0]
+        self.pos[1] = self.pos[1] + self.vel[1]

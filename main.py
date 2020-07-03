@@ -4,36 +4,18 @@ import sys, pygame, os
 
 from pygame.locals import *
 import spritesheet as sh
+import math
 
- 
+
 # Constantes
 WIDTH = 800
 HEIGHT = 600
+TO_RADIAN = math.pi / 180;
 
  
 # Clases
 # ---------------------------------------------------------------------
-class Actor(pygame.sprite.Sprite):
-    '''
-    pos = posicion del sprite (x,y)
-    vel = vel del sprite (,x y)
-    acc = aceleracion del sprite
-    angle = angulo en grados
-    '''
-    def __init__(self, spritesheet, pos, vel, acc, angle):
-        pygame.sprite.Sprite.__init__(self)
-        self.sprite = spritesheet
-        self._pos = pos
-        self._vel = vel
-        self.acc = acc
-        self.angle = angle
-    
-    def update():
-        
-    
-    def render():
-        pass
-     
+
 # ---------------------------------------------------------------------
  
 # Funciones
@@ -60,6 +42,10 @@ def texto(texto, posx, posy,  size, color=(255, 255, 255)):
     salida_rect.centerx = posx
     salida_rect.centery = posy
     return salida, salida_rect
+
+def angleToVector(ang):
+    return [math.cos(ang * TO_RADIAN), math.sin(ang * TO_RADIAN)]
+
  
 # ---------------------------------------------------------------------
 
@@ -72,8 +58,9 @@ def main():
     scrolling_bg_image = load_image('sprites/scroll_bg.png')
     back_rect = scrolling_bg_image.get_rect()
     explosionList= []
-    myShip = sh.SpriteSheet('sprites/shipcuadrado.png', 0, 1, True, 0)
+    ship = sh.SpriteSheet('sprites/ship.png', 0, 2, True, 0)
     explosion = sh.SpriteSheet('sprites/bigexplosion.png', 3, 24, True, 1)
+    
     
     clock = pygame.time.Clock()
     screen.blit(background_image, (0, 0))
@@ -93,15 +80,31 @@ def main():
            #if eventos.type == pygame.KEYUP:
                 pass
 
-        myShip.setFrame(0)
+        ship.setFrame(0)
+        ship.vel[0] *= 0.99
+        ship.vel[1] *= 0.99
+        
         if keys[K_q]:
-            myShip.vel = (1,1)
+            explosion = sh.SpriteSheet('sprites/bigexplosion.png', 3, 24, True, 1)
         if keys[K_m]:
-            myShip.angle -=4
+            ship.angle -=4
         if keys[K_n]:
-            myShip.angle +=4
-        if keys[K_a]:
-            myShip.setFrame(1)
+            ship.angle +=4
+        if keys[K_a]:           
+            acc = angleToVector(ship.angle);
+            ship.vel[0] += (acc[0]) #% maxVel;
+            ship.vel[1] -= (acc[1]) #% maxVel;
+            ship.setFrame(1)
+
+        if (ship.pos[0] < 0):
+            ship.pos[0] = WIDTH - ship.frameW
+
+        ship.pos[0] = ship.pos[0] % WIDTH
+
+        if (ship.pos[1] < 0):
+            ship.pos[1] = HEIGHT - ship.frameH
+
+        ship.pos[1] = ship.pos[1] % HEIGHT;
 
     ##############################draw area#############################
         #draw background
@@ -113,7 +116,7 @@ def main():
         if back_rect.right == 0:
             back_rect.x = 0
         #draw ship
-        myShip.render(screen)
+        ship.render(screen)
         #screen.blit(myShip.render(), (400, 300)) 
         explosion.render (screen)
         #screen.blit(explosion.render(), (200, 300)) 
@@ -122,11 +125,11 @@ def main():
         screen.blit(fps, fps_rect)
         fps, fps_rect = texto (str(time), 500,10, 14)
         screen.blit(fps, fps_rect)
-        fps, fps_rect = texto (str(myShip.angle), 700,10, 14)
+        fps, fps_rect = texto (str(ship.angle), 700,10, 14)
         screen.blit(fps, fps_rect)
 
     ############################update area#############################
-        myShip.update()
+        ship.update()
         explosion.update()
     #repaint
         pygame.display.flip()
