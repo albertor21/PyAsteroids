@@ -25,7 +25,7 @@ class SpriteSheet:
             image.set_colorkey(color, RLEACCEL)
         return image
 
-    def __init__(self, filename, speed, frames, once, frame = 0):
+    def __init__(self, filename, speed, frames, once, velRot = 0, frame = 0):
         pygame.sprite.Sprite.__init__(self)
         self.image = self.load_image(filename, True)
         self.rect = self.image.get_rect()      
@@ -38,7 +38,7 @@ class SpriteSheet:
         self.frame = frame #current frame (zero-based)
         self.frameImage = pygame.Surface ((self.frameW, self.frameH), flags=SRCALPHA) #current image frame
         self.angle = 0
-        self.velRot = 0
+        self.velRot = velRot
         self.pos = [0,0]
         self.vel = [0,0]
         self.acc = [0,0]
