@@ -10,6 +10,7 @@ import math
 # Constantes
 WIDTH = 800
 HEIGHT = 600
+MAXVEL = 15 #ship's max velocity
 TO_RADIAN = math.pi / 180;
 
  
@@ -52,7 +53,6 @@ def angleToVector(ang):
 def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("PyAsteroids")
-    #pygame.key.set_repeat(5)
  
     background_image = load_image('sprites/background-orig.png')
     scrolling_bg_image = load_image('sprites/scroll_bg.png')
@@ -60,8 +60,7 @@ def main():
     explosionList= []
     ship = sh.SpriteSheet('sprites/ship.png', 0, 2, True, 0)
     explosion = sh.SpriteSheet('sprites/bigexplosion.png', 3, 24, True, 1)
-    
-    
+      
     clock = pygame.time.Clock()
     screen.blit(background_image, (0, 0))
    
@@ -71,40 +70,40 @@ def main():
         for eventos in pygame.event.get():
             if eventos.type == QUIT:
                 sys.exit(0)
-
         
            #if eventos.type == pygame.KEYDOWN:
            #    if eventos.key == pygame.K_q:   
            #        explosion = SpriteSheet('sprites/bigexplosion.png', 3, 24, True, 1)
-
            #if eventos.type == pygame.KEYUP:
-                pass
 
         ship.setFrame(0)
-        ship.vel[0] *= 0.99
-        ship.vel[1] *= 0.99
+        ship.vel[0] *= 0.95
+        ship.vel[1] *= 0.95
         
         if keys[K_q]:
             explosion = sh.SpriteSheet('sprites/bigexplosion.png', 3, 24, True, 1)
         if keys[K_m]:
-            ship.angle -=4
+            ship.angle -=6
         if keys[K_n]:
-            ship.angle +=4
-        if keys[K_a]:           
-            acc = angleToVector(ship.angle);
-            ship.vel[0] += (acc[0]) #% maxVel;
-            ship.vel[1] -= (acc[1]) #% maxVel;
+            ship.angle +=6
+        if keys[K_a]: 
+            ##Accelerate          
+            acc = angleToVector(ship.angle)
+            ship.vel[0] = ship.vel[0] + acc[0]
+            if ship.vel[0] > MAXVEL: ship.vel[0] = MAXVEL
+            if ship.vel[0] < -MAXVEL: ship.vel[0] = -MAXVEL
+            ship.vel[1] = ship.vel[1] + acc[1]
+            if ship.vel[1] > MAXVEL: ship.vel[1] = MAXVEL
+            if ship.vel[1] < -MAXVEL: ship.vel[1] = -MAXVEL
             ship.setFrame(1)
 
         if (ship.pos[0] < 0):
             ship.pos[0] = WIDTH - ship.frameW
-
         ship.pos[0] = ship.pos[0] % WIDTH
 
         if (ship.pos[1] < 0):
             ship.pos[1] = HEIGHT - ship.frameH
-
-        ship.pos[1] = ship.pos[1] % HEIGHT;
+        ship.pos[1] = ship.pos[1] % HEIGHT
 
     ##############################draw area#############################
         #draw background

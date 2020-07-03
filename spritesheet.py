@@ -93,4 +93,4 @@ class SpriteSheet:
             _frame = _frame % self.frames
             self.frame = _frame
         self.pos[0] = self.pos[0] + self.vel[0]
-        self.pos[1] = self.pos[1] + self.vel[1]
+        self.pos[1] = self.pos[1] - self.vel[1]
