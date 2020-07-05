@@ -54,12 +54,13 @@ def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("PyAsteroids")
  
-    background_image = load_image('sprites/background-orig.png')
+    background_image = load_image('sprites/background.png')
     scrolling_bg_image = load_image('sprites/scroll_bg.png')
     back_rect = scrolling_bg_image.get_rect()
     explosionList= []
-    ship = sh.SpriteSheet('sprites/ship.png', 0, 2, True, 0)
-    explosion = sh.SpriteSheet('sprites/bigexplosion.png', 3, 24, True, 1)
+    bullets=[]
+    ship = sh.SpriteSheet('sprites/fighter.png', 0, 2, True)
+    explosion = sh.SpriteSheet('sprites/bigexplosion.png', 3, 24, True)
       
     clock = pygame.time.Clock()
     screen.blit(background_image, (0, 0))
@@ -75,24 +76,43 @@ def main():
            #    if eventos.key == pygame.K_q:   
            #        explosion = SpriteSheet('sprites/bigexplosion.png', 3, 24, True, 1)
            #if eventos.type == pygame.KEYUP:
-
+        
         ship.setFrame(0)
         ship.vel[0] *= 0.95
         ship.vel[1] *= 0.95
         
         if keys[K_q]:
-            explosion = sh.SpriteSheet('sprites/bigexplosion.png', 3, 24, True, 1)
+            #explosion = sh.SpriteSheet('sprites/bigexplosion.png', 3, 24, True, 1)
+            explosion = sh.SpriteSheet('sprites/redexplosion.png', 2, 13, True, 1)
+        if keys[K_SPACE]: 
+            acc = angleToVector(ship.angle)
+            aBullet = sh.SpriteSheet('sprites/bullet.png', 0, 1, True)
+            halfFrameWS = ship.frameW // 2 + 1
+            halfFrameHS = ship.frameH // 2 + 1
+            halfFrameWB = aBullet.frameW // 2 + 1
+            halfFrameHB = aBullet.frameH // 2 + 1
+            centerX = ship.pos[0] + halfFrameWS
+            centerY = ship.pos[1] + halfFrameHS
+            #la punta del cañon
+            pointX = centerX + halfFrameWS * acc[0]
+            pointY = centerY - halfFrameHS * acc[1]
+            x = (pointX - centerX) * acc[0] + centerX
+            y = (pointY - centerY) * acc[1] + centerY    
+            aBullet.angle = ship.angle
+            aBullet.pos = [pointX - halfFrameWB, pointY -halfFrameHB]
+            aBullet.vel = [20*acc[0],20*acc[1]]
+            bullets.append (aBullet)
         if keys[K_m]:
-            ship.angle -=6
+            ship.angle -= 6
         if keys[K_n]:
-            ship.angle +=6
+            ship.angle += 6
         if keys[K_a]: 
             ##Accelerate          
             acc = angleToVector(ship.angle)
             ship.vel[0] = ship.vel[0] + acc[0]
             if ship.vel[0] > MAXVEL: ship.vel[0] = MAXVEL
             if ship.vel[0] < -MAXVEL: ship.vel[0] = -MAXVEL
-            ship.vel[1] = ship.vel[1] + acc[1]
+            ship.vel[1] = ship.vel[1] + acc[1] 
             if ship.vel[1] > MAXVEL: ship.vel[1] = MAXVEL
             if ship.vel[1] < -MAXVEL: ship.vel[1] = -MAXVEL
             ship.setFrame(1)
@@ -116,9 +136,10 @@ def main():
             back_rect.x = 0
         #draw ship
         ship.render(screen)
-        #screen.blit(myShip.render(), (400, 300)) 
         explosion.render (screen)
-        #screen.blit(explosion.render(), (200, 300)) 
+        for each in bullets:
+            each.render(screen)
+        
         #draw fps text
         fps, fps_rect = texto (str(int(clock.get_fps())), 400,10, 14)
         screen.blit(fps, fps_rect)
@@ -130,6 +151,9 @@ def main():
     ############################update area#############################
         ship.update()
         explosion.update()
+        for each in bullets:
+            each.update()
+
     #repaint
         pygame.display.flip()
         

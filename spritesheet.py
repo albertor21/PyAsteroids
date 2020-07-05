@@ -68,28 +68,28 @@ class SpriteSheet:
         rotated_image = pygame.transform.rotate(image, angle)
         # rotate and blit the image
         screen.blit(rotated_image, origin)
-        # draw rectangle around the image
-        #pygame.draw.rect (screen, (255, 0, 0), (*origin, *rotated_image.get_size()),2)
+        # draw rectangle around the image (DEBUG)
+        pygame.draw.rect (screen, (255, 0, 0), (*origin, *rotated_image.get_size()),2)
 
     def render(self, screen):
         if not self.done:
             rect_frame = (self.frame * self.frameW , 0, self.frameW, self.frameH)
             self.frameImage.fill ((0,0,0,0))
             self.frameImage.blit (self.image, (0,0), rect_frame) 
-            if self.angle == 0:    
-                screen.blit (self.frameImage, self.pos)
-            else:
-                cRenderImage = self.frameImage.copy()  
-                centerSprite =  (self.frameW//2,  self.frameH//2 )
-                posRender = (self.pos[0] + centerSprite[0], self.pos[1]+ centerSprite[1] )    
-                self.blitRotate(screen, cRenderImage, posRender, centerSprite, self.angle)
+            #if self.angle == 0:    
+            #    screen.blit (self.frameImage, self.pos)
+            #else:
+            cRenderImage = self.frameImage.copy()  
+            centerSprite =  (self.frameW//2,  self.frameH//2 )
+            posRender = (self.pos[0] + centerSprite[0], self.pos[1]+ centerSprite[1] )    
+            self.blitRotate(screen, cRenderImage, posRender, centerSprite, self.angle)
                
     def update(self):  
         if self.speed > 0:
             _frame = self.frame
             _frame = _frame  + math.floor(self.speed )
             if (self.once and _frame >= self.frames):
-                self.done = True;
+                self.done = True
             _frame = _frame % self.frames
             self.frame = _frame
         self.pos[0] = self.pos[0] + self.vel[0]
