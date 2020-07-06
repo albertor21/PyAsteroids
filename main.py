@@ -11,7 +11,7 @@ import math
 WIDTH = 1000
 HEIGHT = 750
 MAXVEL = 15 #ship's max velocity
-BULLETSPEED = 40
+BULLETSPEED = 5
 TO_RADIAN = math.pi / 180;
 
  
@@ -75,13 +75,15 @@ def main():
     music = pygame.mixer.music.load(os.path.join (sys.path[0], "sounds/soundtrack.ogg"))
 
     explosions= []
-    bullets=[]
+    bullets= set ([])
     bigAsteroids = []
+    smallAsteroids = []
     ship = sh.SpriteSheet('sprites/fighter.png', 0, 2, True)
     clock = pygame.time.Clock()
     lastShot = pygame.time.get_ticks()
+    lastvelocity = [0,0]
     screen.blit(background_image, (0, 0))
-    #pygame.mixer.music.play(-1) # -1 will ensure the song keeps looping
+    pygame.mixer.music.play(-1) # -1 will ensure the song keeps looping
     while True:
         time = clock.tick(30)
         keys = pygame.key.get_pressed()
@@ -94,7 +96,19 @@ def main():
            #        explosion = SpriteSheet('sprites/bigexplosion.png', 3, 24, True, 1)
            #if eventos.type == pygame.KEYUP:
         
-        
+        #randomly appearance of bigAsteroids
+        if random.randint(0,1) < 1- math.pow (0.993, pygame.time.get_ticks()) and len(bigAsteroids) < 3:
+            anAsteroid = sh.SpriteSheet('sprites/asteroid.png', 0, 1, True, random.randint(0,10))
+            anAsteroid.pos = [500,500]
+            anAsteroid.vel = [random.randint(1,5), random.randint(1,5)]
+            bigAsteroids.append (anAsteroid)
+
+
+
+        #when not thrusting
+        ship.setFrame(0)
+        ship.vel[0] *= 0.95
+        ship.vel[1] *= 0.95
         
         #Control keyboard
         if keys[K_q]:
@@ -118,7 +132,7 @@ def main():
                 aBullet.pos = [pointX - halfFrameWB, pointY -halfFrameHB]
                 aBullet.angle = ship.angle
                 aBullet.vel = [BULLETSPEED * acc[0], BULLETSPEED * acc[1]]
-                bullets.append (aBullet)
+                bullets.add (aBullet)
                 lastShot = pygame.time.get_ticks()
                 bulletSound.play()
         if keys[K_m]:
@@ -136,14 +150,14 @@ def main():
             if ship.vel[1] < -MAXVEL: ship.vel[1] = -MAXVEL
             ship.setFrame(1)
             thrustSound.play()
-
-        ship.setFrame(0)
-        ship.vel[0] *= 0.95
-        ship.vel[1] *= 0.95
-        if ship.vel[0] < 1: 
+            lastvelocity[0] = ship.vel[0]
+            lastvelocity[1] = ship.vel[1]
+      
+        #when decelerating
+        if (abs(lastvelocity[0]) - abs(ship.vel[0])) > 1 or (abs(lastvelocity[1]) - abs(ship.vel[1])) > 1 :
             thrustSound.stop()
-            print ("frene")
-
+            
+        #reappearing 
         if (ship.pos[0] < 0):
             ship.pos[0] = WIDTH - ship.frameW
         ship.pos[0] = ship.pos[0] % WIDTH
@@ -169,13 +183,19 @@ def main():
         #draw explosions
         for explosion in explosions:
             explosion.render(screen)
+
+        #draw asteroids
+        for bigAsteroid in bigAsteroids:
+            bigAsteroid.render(screen)
+        for smallAsteroid in smallAsteroids:
+            smallAsteroid.render(screen)
         
         #draw fps text
         fps, fps_rect = texto (str(int(clock.get_fps())), 400,10, 14)
         screen.blit(fps, fps_rect)
         fps, fps_rect = texto (str(ship.vel[0]), 500,10, 14)
         screen.blit(fps, fps_rect)
-        fps, fps_rect = texto (str(ship.angle), 700,10, 14)
+        fps, fps_rect = texto (str(lastvelocity[0]), 700,10, 14)
         screen.blit(fps, fps_rect)
 
     ############################update area#############################
@@ -185,10 +205,21 @@ def main():
             if explosion.done:
                 explosions.pop()
 
-        for bullet in bullets:
-            bullet.update()
-            if offScreen(bullet.pos):
-                bullets.pop()
+        for each in list(bullets): 
+            if offScreen(each.pos):
+                bullets.discard(each)
+        #bullets[:] = [x for x in bullets if not offScreen(x.pos)]
+        
+        
+        for smallAsteroid in smallAsteroids:
+            smallAsteroid.update()
+            if offScreen(smallAsteroid.pos):
+                smallAsteroid.pop()
+
+        for bigAsteroid in bigAsteroids:
+            bigAsteroid.update()
+            if offScreen(bigAsteroid.pos):
+                bigAsteroids.pop()
 
     #repaint screen
         pygame.display.flip()
