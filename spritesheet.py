@@ -90,5 +90,7 @@ class SpriteSheet:
                 self.done = True
             _frame = _frame % self.frames
             self.frame = _frame
+        if self.velRot != 0:
+            self.angle += self.velRot
         self.pos[0] = self.pos[0] + self.vel[0]
         self.pos[1] = self.pos[1] - self.vel[1]
