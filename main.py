@@ -1,16 +1,17 @@
 
 # Módulos
 import sys, pygame, os
-
+import random
 from pygame.locals import *
 import spritesheet as sh
 import math
 
 
 # Constantes
-WIDTH = 800
-HEIGHT = 600
+WIDTH = 1000
+HEIGHT = 750
 MAXVEL = 15 #ship's max velocity
+BULLETSPEED = 40
 TO_RADIAN = math.pi / 180;
 
  
@@ -47,24 +48,40 @@ def texto(texto, posx, posy,  size, color=(255, 255, 255)):
 def angleToVector(ang):
     return [math.cos(ang * TO_RADIAN), math.sin(ang * TO_RADIAN)]
 
+def offScreen (pos):
+    if pos[0] < 0 or pos[0] > WIDTH or pos[1] > HEIGHT or pos[1] < 0:
+        return True
+    return False
+
+def distance (pos1, pos2):
+    return (Math.sqrt(Math.pow(pos2[0] - pos1[0], 2) + Math.pow(pos2[1] - pos1[1], 2)))
+
+  
+
  
 # ---------------------------------------------------------------------
 
 def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("PyAsteroids")
- 
-    background_image = load_image('sprites/background.png')
-    scrolling_bg_image = load_image('sprites/scroll_bg.png')
+    pygame.mixer.init()
+    background_image = load_image('sprites/backgroundB.png')
+    scrolling_bg_image = load_image('sprites/scroll_bgB.png')
     back_rect = scrolling_bg_image.get_rect()
-    explosionList= []
+
+    bulletSound = pygame.mixer.Sound(os.path.join (sys.path[0], "sounds/missile.ogg"))
+    explosionSound = pygame.mixer.Sound(os.path.join (sys.path[0], "sounds/explosion.ogg"))
+    thrustSound = pygame.mixer.Sound(os.path.join (sys.path[0], "sounds/thrust.ogg"))
+    music = pygame.mixer.music.load(os.path.join (sys.path[0], "sounds/soundtrack.ogg"))
+
+    explosions= []
     bullets=[]
+    bigAsteroids = []
     ship = sh.SpriteSheet('sprites/fighter.png', 0, 2, True)
-    explosion = sh.SpriteSheet('sprites/bigexplosion.png', 3, 24, True)
-      
     clock = pygame.time.Clock()
+    lastShot = pygame.time.get_ticks()
     screen.blit(background_image, (0, 0))
-   
+    #pygame.mixer.music.play(-1) # -1 will ensure the song keeps looping
     while True:
         time = clock.tick(30)
         keys = pygame.key.get_pressed()
@@ -77,31 +94,33 @@ def main():
            #        explosion = SpriteSheet('sprites/bigexplosion.png', 3, 24, True, 1)
            #if eventos.type == pygame.KEYUP:
         
-        ship.setFrame(0)
-        ship.vel[0] *= 0.95
-        ship.vel[1] *= 0.95
         
+        
+        #Control keyboard
         if keys[K_q]:
-            #explosion = sh.SpriteSheet('sprites/bigexplosion.png', 3, 24, True, 1)
-            explosion = sh.SpriteSheet('sprites/redexplosion.png', 2, 13, True, 1)
+            explosionSound.play()
+            aExplosion = sh.SpriteSheet('sprites/redexplosion.png', 1, 13, True, 1)
+            aExplosion.pos = [random.randint(0,WIDTH), random.randint (0, HEIGHT)]
+            explosions.append (aExplosion)
         if keys[K_SPACE]: 
-            acc = angleToVector(ship.angle)
-            aBullet = sh.SpriteSheet('sprites/bullet.png', 0, 1, True)
-            halfFrameWS = ship.frameW // 2 + 1
-            halfFrameHS = ship.frameH // 2 + 1
-            halfFrameWB = aBullet.frameW // 2 + 1
-            halfFrameHB = aBullet.frameH // 2 + 1
-            centerX = ship.pos[0] + halfFrameWS
-            centerY = ship.pos[1] + halfFrameHS
-            #la punta del cañon
-            pointX = centerX + halfFrameWS * acc[0]
-            pointY = centerY - halfFrameHS * acc[1]
-            x = (pointX - centerX) * acc[0] + centerX
-            y = (pointY - centerY) * acc[1] + centerY    
-            aBullet.angle = ship.angle
-            aBullet.pos = [pointX - halfFrameWB, pointY -halfFrameHB]
-            aBullet.vel = [20*acc[0],20*acc[1]]
-            bullets.append (aBullet)
+            if (pygame.time.get_ticks() - lastShot) > 150:
+                acc = angleToVector(ship.angle)
+                aBullet = sh.SpriteSheet('sprites/bullet.png', 0, 1, True)
+                halfFrameWS = ship.frameW // 2 + 1
+                halfFrameHS = ship.frameH // 2 + 1
+                halfFrameWB = aBullet.frameW // 2 + 1
+                halfFrameHB = aBullet.frameH // 2 + 1
+                centerX = ship.pos[0] + halfFrameWS
+                centerY = ship.pos[1] + halfFrameHS
+                #la punta del cañon
+                pointX = centerX + halfFrameWS * acc[0]
+                pointY = centerY - halfFrameHS * acc[1]               
+                aBullet.pos = [pointX - halfFrameWB, pointY -halfFrameHB]
+                aBullet.angle = ship.angle
+                aBullet.vel = [BULLETSPEED * acc[0], BULLETSPEED * acc[1]]
+                bullets.append (aBullet)
+                lastShot = pygame.time.get_ticks()
+                bulletSound.play()
         if keys[K_m]:
             ship.angle -= 6
         if keys[K_n]:
@@ -116,6 +135,14 @@ def main():
             if ship.vel[1] > MAXVEL: ship.vel[1] = MAXVEL
             if ship.vel[1] < -MAXVEL: ship.vel[1] = -MAXVEL
             ship.setFrame(1)
+            thrustSound.play()
+
+        ship.setFrame(0)
+        ship.vel[0] *= 0.95
+        ship.vel[1] *= 0.95
+        if ship.vel[0] < 1: 
+            thrustSound.stop()
+            print ("frene")
 
         if (ship.pos[0] < 0):
             ship.pos[0] = WIDTH - ship.frameW
@@ -136,25 +163,34 @@ def main():
             back_rect.x = 0
         #draw ship
         ship.render(screen)
-        explosion.render (screen)
+        #draw bullets
         for each in bullets:
             each.render(screen)
+        #draw explosions
+        for explosion in explosions:
+            explosion.render(screen)
         
         #draw fps text
         fps, fps_rect = texto (str(int(clock.get_fps())), 400,10, 14)
         screen.blit(fps, fps_rect)
-        fps, fps_rect = texto (str(time), 500,10, 14)
+        fps, fps_rect = texto (str(ship.vel[0]), 500,10, 14)
         screen.blit(fps, fps_rect)
         fps, fps_rect = texto (str(ship.angle), 700,10, 14)
         screen.blit(fps, fps_rect)
 
     ############################update area#############################
         ship.update()
-        explosion.update()
-        for each in bullets:
-            each.update()
+        for explosion in explosions:
+            explosion.update()
+            if explosion.done:
+                explosions.pop()
 
-    #repaint
+        for bullet in bullets:
+            bullet.update()
+            if offScreen(bullet.pos):
+                bullets.pop()
+
+    #repaint screen
         pygame.display.flip()
         
     return 0
