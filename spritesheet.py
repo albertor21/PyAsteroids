@@ -38,6 +38,11 @@ class SpriteSheet:
         self.frame = frame #current frame (zero-based)
         self.frameImage = pygame.Surface ((self.frameW, self.frameH), flags=SRCALPHA) #current image frame
         self.angle = 0
+        #se hace una mascara con el frame 0 del spritesheet
+        rect_frame = (0 , 0, self.frameW, self.frameH)
+        self.frameImage.fill ((0,0,0,0))
+        self.frameImage.blit (self.image, (0,0), rect_frame) 
+        self.mask = pygame.mask.from_surface(self.frameImage)
         self.velRot = velRot
         self.pos = [0,0]
         self.vel = [0,0]
@@ -46,7 +51,6 @@ class SpriteSheet:
 
     def setFrame(self, frame):
         self.frame = frame
-        self.frameImage = pygame.Surface ((self.frameW, self.frameH), flags=SRCALPHA)
         
     def blitRotate(self, screen, image, pos, originPos, angle):
         #https://stackoverflow.com/questions/4183208/how-do-i-rotate-an-image-around-its-center-using-pygame
@@ -85,11 +89,12 @@ class SpriteSheet:
     def update(self):  
         if self.speed > 0:
             _frame = self.frame
-            _frame = _frame  + math.floor(self.speed )
+            _frame = _frame + self.speed 
             if (self.once and _frame >= self.frames):
                 self.done = True
-            _frame = _frame % self.frames
-            self.frame = _frame
+            if _frame > self.frames: _frame = 0
+            #_frame = _frame % self.frames
+            self.frame = math.floor(_frame)
         if self.velRot != 0:
             self.angle += self.velRot
         self.pos[0] = self.pos[0] + self.vel[0]

@@ -10,7 +10,8 @@ import math
 # Constantes
 WIDTH = 1000
 HEIGHT = 750
-MAXVEL = 15 #ship's max velocity
+MAXVELSHIP = 15 #ship's max velocity
+MAXVELASTEROID = 3# 15 #ship's max velocity
 BULLETSPEED = 50
 TO_RADIAN = math.pi / 180;
 
@@ -56,12 +57,16 @@ def offScreen (pos):
 def distance (pos1, pos2):
     return (Math.sqrt(Math.pow(pos2[0] - pos1[0], 2) + Math.pow(pos2[1] - pos1[1], 2)))
 
-  
+def collide(obj1, obj2):
+    offset_x = int (obj2.pos[0] - obj1.pos[0])
+    offset_y = int (obj2.pos[1] - obj1.pos[1])
+    return obj1.mask.overlap(obj2.mask, (offset_x, offset_y)) != None
 
  
 # ---------------------------------------------------------------------
 
 def main():
+    print (pygame.version.ver)
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("PyAsteroids")
     pygame.mixer.init()
@@ -76,6 +81,8 @@ def main():
     pygame.mixer.music.set_volume(0.3)
 
     lives = 3
+    score = 0
+    fuel = 100
     explosions = []
     bullets = []
     bigAsteroids = []
@@ -94,10 +101,10 @@ def main():
                 sys.exit(0)
         
         #randomly appearance of bigAsteroids
-        if random.randint(0,1) < 1- math.pow (0.993, pygame.time.get_ticks()) and len(bigAsteroids) < 3:
+        if random.randint(0,1) < 1- math.pow (0.993, pygame.time.get_ticks()) and len(bigAsteroids) < 5:
             anAsteroid = sh.SpriteSheet('sprites/asteroid.png', 0, 1, True, random.randint(-4, 4))
             anAsteroid.pos = [random.randint(0,WIDTH), random.randint(0, HEIGHT)]
-            anAsteroid.vel = [random.randint(-5,5), random.randint(-5,5)]
+            anAsteroid.vel = [random.randint(-1,1), random.randint(-1,1)]
             bigAsteroids.append (anAsteroid)
 
         #when not thrusting
@@ -131,18 +138,18 @@ def main():
                 lastShot = pygame.time.get_ticks()
                 bulletSound.play()
         if keys[K_m]:
-            ship.angle -= 6
+            ship.angle -= 4
         if keys[K_n]:
-            ship.angle += 6
+            ship.angle += 4
         if keys[K_a]: 
             ##Accelerate          
             acc = angleToVector(ship.angle)
             ship.vel[0] = ship.vel[0] + acc[0]
-            if ship.vel[0] > MAXVEL: ship.vel[0] = MAXVEL
-            if ship.vel[0] < -MAXVEL: ship.vel[0] = -MAXVEL
+            if ship.vel[0] > MAXVELSHIP: ship.vel[0] = MAXVELSHIP
+            if ship.vel[0] < -MAXVELSHIP: ship.vel[0] = -MAXVELSHIP
             ship.vel[1] = ship.vel[1] + acc[1] 
-            if ship.vel[1] > MAXVEL: ship.vel[1] = MAXVEL
-            if ship.vel[1] < -MAXVEL: ship.vel[1] = -MAXVEL
+            if ship.vel[1] > MAXVELSHIP: ship.vel[1] = MAXVELSHIP
+            if ship.vel[1] < -MAXVELSHIP: ship.vel[1] = -MAXVELSHIP
             ship.setFrame(1)
             thrustSound.play()
             lastvelocity[0] = ship.vel[0]
@@ -160,6 +167,8 @@ def main():
         if (ship.pos[1] < 0):
             ship.pos[1] = HEIGHT - ship.frameH
         ship.pos[1] = ship.pos[1] % HEIGHT
+
+        fuel -= 0.05
 
     ##############################draw area#############################
         #draw background
@@ -189,18 +198,36 @@ def main():
         #draw fps text
         fps, fps_rect = texto (str(int(clock.get_fps())), 400,10, 14)
         screen.blit(fps, fps_rect)
-        fps, fps_rect = texto (str(len(bullets)), 500,10, 14)
-        screen.blit(fps, fps_rect)
-        fps, fps_rect = texto (f"Lives: {lives}", WIDTH-70, 30, 32)
-        screen.blit(fps, fps_rect)
+        #fps, fps_rect = texto (str(len(bullets)), 500,10, 14)
+        #screen.blit(fps, fps_rect)
+        livesTxt, livesTxtRect = texto ("Lives: {}".format (lives), WIDTH-100, 30, 32)
+        screen.blit(livesTxt, livesTxtRect)
+        scoreTxt, scoreTxtRect = texto ("Score: {}".format (score) , 100, 30, 32)
+        screen.blit(scoreTxt, scoreTxtRect)
 
-    ############################update area#############################
+        pygame.draw.rect(screen, (255,0,0), (500, 30 , 100, 10))
+        pygame.draw.rect(screen, (0,255,0), (500, 30 , fuel, 10))
+
+    ############################update area#############################        
         ship.update()
         for explosion in explosions[:]:
             explosion.update()
             if explosion.done:
                 explosions.remove(explosion)
 
+        for bullet in bullets:
+            for bigAsteroid in bigAsteroids:
+                if collide (bullet, bigAsteroid):
+                    explosionSound.play()
+                    aExplosion = sh.SpriteSheet('sprites/bigredexplosion.png', 1, 13, True)
+                    aExplosion.pos = [bigAsteroid.pos[0], bigAsteroid.pos[1]]
+                    aExplosion.vel = [bigAsteroid.vel[0], bigAsteroid.vel[1]]
+                    aExplosion.velRot = bigAsteroid.velRot
+                    explosions.append (aExplosion)
+                    bigAsteroids.remove(bigAsteroid)
+                    bullets.remove(bullet)
+                    score +=10
+        
         for bullet in bullets[:]:
             bullet.update()
             if offScreen(bullet.pos):
@@ -213,6 +240,15 @@ def main():
 
         for bigAsteroid in bigAsteroids[:]:
             bigAsteroid.update()
+            if collide(bigAsteroid, ship):
+                explosionSound.play()
+                aExplosion = sh.SpriteSheet('sprites/bigredexplosion.png', 1, 13, True)
+                aExplosion.pos = [bigAsteroid.pos[0], bigAsteroid.pos[1]]
+                explosions.append (aExplosion)
+                otherExplosion = sh.SpriteSheet('sprites/redexplosion.png', 1, 13, True)
+                otherExplosion.pos = [ship.pos[0], ship.pos[1]]
+                explosions.append (otherExplosion)
+                bigAsteroids.remove(bigAsteroid)
             if offScreen(bigAsteroid.pos):
                 bigAsteroids.remove(bigAsteroid)
 
