@@ -142,7 +142,7 @@ def main():
         if keys[K_n]:
             ship.angle += 4
         if keys[K_a]: 
-            ##Accelerate          
+            ##Accelerate         
             acc = angleToVector(ship.angle)
             ship.vel[0] = ship.vel[0] + acc[0]
             if ship.vel[0] > MAXVELSHIP: ship.vel[0] = MAXVELSHIP
@@ -154,6 +154,7 @@ def main():
             thrustSound.play()
             lastvelocity[0] = ship.vel[0]
             lastvelocity[1] = ship.vel[1]
+            fuel -= 0.15  
       
         #when decelerating
         if (abs(lastvelocity[0]) - abs(ship.vel[0])) > 1 or (abs(lastvelocity[1]) - abs(ship.vel[1])) > 1 :
@@ -168,7 +169,6 @@ def main():
             ship.pos[1] = HEIGHT - ship.frameH
         ship.pos[1] = ship.pos[1] % HEIGHT
 
-        fuel -= 0.05
 
     ##############################draw area#############################
         #draw background
@@ -196,7 +196,7 @@ def main():
             smallAsteroid.render(screen)
         
         #draw fps text
-        fps, fps_rect = texto (str(int(clock.get_fps())), 400,10, 14)
+        fps, fps_rect = texto (str(int(clock.get_fps())), 720,5, 14)
         screen.blit(fps, fps_rect)
         #fps, fps_rect = texto (str(len(bullets)), 500,10, 14)
         #screen.blit(fps, fps_rect)
@@ -204,9 +204,11 @@ def main():
         screen.blit(livesTxt, livesTxtRect)
         scoreTxt, scoreTxtRect = texto ("Score: {}".format (score) , 100, 30, 32)
         screen.blit(scoreTxt, scoreTxtRect)
-
-        pygame.draw.rect(screen, (255,0,0), (500, 30 , 100, 10))
-        pygame.draw.rect(screen, (0,255,0), (500, 30 , fuel, 10))
+        fuelTxt, fuelTxtRect = texto ("Fuel" , 505, 20, 22)
+        screen.blit(fuelTxt, fuelTxtRect)
+        #draw Fuel
+        pygame.draw.rect(screen, (255,0,0), (450, 30 , 100, 10))
+        pygame.draw.rect(screen, (0,255,0), (450, 30 , fuel, 10))
 
     ############################update area#############################        
         ship.update()

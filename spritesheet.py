@@ -71,7 +71,7 @@ class SpriteSheet:
         # rotate and blit the image
         screen.blit(rotated_image, origin)
         # draw rectangle around the image (DEBUG)
-        #pygame.draw.rect (screen, (255, 0, 0), (*origin, *rotated_image.get_size()),1)
+        pygame.draw.rect (screen, (255, 0, 0), (*origin, *rotated_image.get_size()),1)
 
     def render(self, screen):
         if not self.done:
