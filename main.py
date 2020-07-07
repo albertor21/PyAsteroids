@@ -62,6 +62,8 @@ def collide(obj1, obj2):
     offset_y = int (obj2.pos[1] - obj1.pos[1])
     return obj1.mask.overlap(obj2.mask, (offset_x, offset_y)) != None
 
+def gameOver(screen):
+    pygame.draw.rect (screen, (125,125,125,100), (200,200, 600, 350))
  
 # ---------------------------------------------------------------------
 
@@ -80,6 +82,7 @@ def main():
     music = pygame.mixer.music.load(os.path.join (sys.path[0], "sounds/soundtrack.ogg"))
     pygame.mixer.music.set_volume(0.3)
 
+    run = True
     lives = 3
     score = 0
     fuel = 100
@@ -93,7 +96,7 @@ def main():
     lastvelocity = [0,0]
     screen.blit(background_image, (0, 0))
     pygame.mixer.music.play(-1) # -1 will ensure the song keeps looping
-    while True:
+    while run:
         time = clock.tick(30)
         keys = pygame.key.get_pressed()
         for eventos in pygame.event.get():
@@ -137,24 +140,25 @@ def main():
                 bullets.append (aBullet)
                 lastShot = pygame.time.get_ticks()
                 bulletSound.play()
-        if keys[K_m]:
-            ship.angle -= 4
-        if keys[K_n]:
-            ship.angle += 4
-        if keys[K_a]: 
+        if keys[K_s]:
+            ship.angle -= 6
+        if keys[K_a]:
+            ship.angle += 6
+        if keys[K_m]: 
             ##Accelerate         
-            acc = angleToVector(ship.angle)
-            ship.vel[0] = ship.vel[0] + acc[0]
-            if ship.vel[0] > MAXVELSHIP: ship.vel[0] = MAXVELSHIP
-            if ship.vel[0] < -MAXVELSHIP: ship.vel[0] = -MAXVELSHIP
-            ship.vel[1] = ship.vel[1] + acc[1] 
-            if ship.vel[1] > MAXVELSHIP: ship.vel[1] = MAXVELSHIP
-            if ship.vel[1] < -MAXVELSHIP: ship.vel[1] = -MAXVELSHIP
-            ship.setFrame(1)
-            thrustSound.play()
-            lastvelocity[0] = ship.vel[0]
-            lastvelocity[1] = ship.vel[1]
-            fuel -= 0.15  
+            if fuel > 0:
+                acc = angleToVector(ship.angle)
+                ship.vel[0] = ship.vel[0] + acc[0]
+                if ship.vel[0] > MAXVELSHIP: ship.vel[0] = MAXVELSHIP
+                if ship.vel[0] < -MAXVELSHIP: ship.vel[0] = -MAXVELSHIP
+                ship.vel[1] = ship.vel[1] + acc[1] 
+                if ship.vel[1] > MAXVELSHIP: ship.vel[1] = MAXVELSHIP
+                if ship.vel[1] < -MAXVELSHIP: ship.vel[1] = -MAXVELSHIP
+                ship.setFrame(1)
+                thrustSound.play()
+                lastvelocity[0] = ship.vel[0]
+                lastvelocity[1] = ship.vel[1]
+                fuel -= 0.15  
       
         #when decelerating
         if (abs(lastvelocity[0]) - abs(ship.vel[0])) > 1 or (abs(lastvelocity[1]) - abs(ship.vel[1])) > 1 :
@@ -196,7 +200,7 @@ def main():
             smallAsteroid.render(screen)
         
         #draw fps text
-        fps, fps_rect = texto (str(int(clock.get_fps())), 720,5, 14)
+        fps, fps_rect = texto (str(int(clock.get_fps())), 30,700, 14)
         screen.blit(fps, fps_rect)
         #fps, fps_rect = texto (str(len(bullets)), 500,10, 14)
         #screen.blit(fps, fps_rect)
@@ -217,8 +221,8 @@ def main():
             if explosion.done:
                 explosions.remove(explosion)
 
-        for bullet in bullets:
-            for bigAsteroid in bigAsteroids:
+        for bullet in bullets[:]:
+            for bigAsteroid in bigAsteroids[:]:
                 if collide (bullet, bigAsteroid):
                     explosionSound.play()
                     aExplosion = sh.SpriteSheet('sprites/bigredexplosion.png', 1, 13, True)
@@ -227,7 +231,10 @@ def main():
                     aExplosion.velRot = bigAsteroid.velRot
                     explosions.append (aExplosion)
                     bigAsteroids.remove(bigAsteroid)
-                    bullets.remove(bullet)
+                    try:
+                        bullets.remove(bullet)
+                    except:
+                        print ("error")
                     score +=10
         
         for bullet in bullets[:]:
@@ -251,6 +258,10 @@ def main():
                 otherExplosion.pos = [ship.pos[0], ship.pos[1]]
                 explosions.append (otherExplosion)
                 bigAsteroids.remove(bigAsteroid)
+                lives -=1
+                if lives == 0: 
+                    #run = False
+                    gameOver(screen)
             if offScreen(bigAsteroid.pos):
                 bigAsteroids.remove(bigAsteroid)
 
