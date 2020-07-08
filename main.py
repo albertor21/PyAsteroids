@@ -91,7 +91,7 @@ def main():
     run = True
     score = 0
     fuel = 100
-    deflector = 10
+    deflector = 100
     tankEmpty = False
     tankOnGame = False
     explosions = []
@@ -202,11 +202,11 @@ def main():
                 bullets.append (aBullet)
                 lastShot = pygame.time.get_ticks()
                 bulletSound.play()
-        if keys[K_m]:
+        if keys[K_s]:
             ship.angle -= SHIP_ROTATION_VEL
-        if keys[K_n]:
+        if keys[K_a]:
             ship.angle += SHIP_ROTATION_VEL
-        if keys[K_a]: 
+        if keys[K_m]: 
             ##Accelerate         
             if fuel > 0:
                 acc = angleToVector(ship.angle)
@@ -253,6 +253,7 @@ def main():
            
         tank.update()
         ship.update()
+        deflector -= 0.05 #deflector power decreases anyway with time
         for explosion in explosions[:]:
             explosion.update()
             if explosion.done:
@@ -261,9 +262,7 @@ def main():
         if collide (ship, tank) and fuel < 100:
             fuel += 1
 
-        if deflector < 0: 
-            #run = False
-            gameOver()
+        
 
                     
         for bullet in bullets[:]:
@@ -274,7 +273,9 @@ def main():
                     aExplosion.pos = [bigAsteroid.pos[0], bigAsteroid.pos[1]]
                     aExplosion.vel = [bigAsteroid.vel[0], bigAsteroid.vel[1]]
                     aExplosion.velRot = bigAsteroid.velRot
-                    explosions.append (aExplosion)                  
+                    explosions.append (aExplosion)  
+                    if deflector <100:
+                        deflector+= 5                
                     #spawnLittleAsteroids
                     spawnlist = []
                     for i in range (3):
@@ -303,7 +304,7 @@ def main():
                     explosions.append (aExplosion)                  
                     smallAsteroids.remove(smallAsteroid)
                     if deflector <100:
-                        deflector += 5
+                        deflector+= 10
                     try:
                         bullets.remove(bullet)
                     except:
@@ -346,11 +347,12 @@ def main():
                 explosions.append (otherExplosion)
                 smallAsteroids.remove(smallAsteroid)
                 deflector -= 5
-                if deflector < 0: 
-                    #run = False
-                    gameOver()
             if offScreen(smallAsteroid.pos):
                 smallAsteroids.remove(smallAsteroid)
+
+        if deflector < 0: 
+            #run = False
+            gameOver()
      
     return 0
 
@@ -371,21 +373,24 @@ def main_menu():
 
 def gameOver():
     title_font = pygame.font.SysFont("comicsans", 70)
-    coin = pygame.font.SysFont("comicsans", 40)
-    #run = True
-    #while run:
-    screen.blit(background_image, (0, 0))
-    pygame.draw.rect (screen, (125,125,125,100), (200,200, 600, 350))
-    title_label = title_font.render("Game Over", 1, (255,0,0))
-    screen.blit(title_label, (WIDTH/2 - title_label.get_width()/2, 350))
-    coin_label = title_font.render("Insert Coin", 1, (255,255,255))
-    screen.blit(coin_label, (WIDTH/2 - title_label.get_width()/2, 550))
-    #pygame.display.update()
-    #for event in pygame.event.get():
-    #    if event.type == pygame.QUIT:
-    #        run = False
-    #    if event.type == pygame.MOUSEBUTTONDOWN:
-    #        main()
+    coin_font = pygame.font.SysFont("comicsans", 40)
+    run = True
+    while run:
+        screen.blit(background_image, (0, 0))
+        rectangle = pygame.Surface((WIDTH-300, HEIGHT-200)) 
+        rectangle.set_alpha(50)            # alpha level
+        rectangle.fill((255,0,0))           # this fills the entire surface
+        screen.blit(rectangle, (150,100))    
+        title_label = title_font.render("Game Over", 1, (255,0,0))
+        screen.blit(title_label, (WIDTH/2 - title_label.get_width()/2, 350))
+        coin_label = coin_font.render("Insert Coin", 1, (255,255,255))
+        screen.blit(coin_label, (WIDTH/2 - title_label.get_width()/2, 550))
+        pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                main()
     #pygame.quit()
 
  
