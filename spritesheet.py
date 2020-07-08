@@ -26,7 +26,7 @@ class SpriteSheet:
         return image
 
     def __init__(self, filename, speed, frames, once, velRot = 0, frame = 0):
-        pygame.sprite.Sprite.__init__(self)
+        #pygame.sprite.Sprite.__init__(self)
         self.image = self.load_image(filename, True)
         self.rect = self.image.get_rect()      
         self.speed = speed
