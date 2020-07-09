@@ -25,17 +25,20 @@ class SpriteSheet:
             image.set_colorkey(color, RLEACCEL)
         return image
 
-    def __init__(self, filename, speed, frames, once, velRot = 0, frame = 0):
+    def __init__(self, filename, speed, cols, rows, once, velRot = 0, frame = 0):
         #pygame.sprite.Sprite.__init__(self)
         self.image = self.load_image(filename, True)
         self.rect = self.image.get_rect()      
         self.speed = speed
-        self.frames = frames #number of frames
-        self.once = once
-        self.done = False
-        self.frameW = int(self.rect.width / frames)
-        self.frameH = int (self.rect.height)
+        self.cols = cols #number of cols
+        self.rows = rows #number of rows
+        self.frames = cols * rows #number of frames
+        self.once = once #animate once
+        self.done = False #animation done (if once)
+        self.frameW = int(self.rect.width / cols)
+        self.frameH = int (self.rect.height / rows)
         self.frame = frame #current frame (zero-based)
+        self.frameTemp = frame #(float) use to increase frame number according to speed
         self.frameImage = pygame.Surface ((self.frameW, self.frameH), flags=SRCALPHA) #current image frame
         self.angle = 0
         #se hace una mascara con el frame 0 del spritesheet
@@ -48,8 +51,17 @@ class SpriteSheet:
         self.vel = [0,0]
         self.acc = [0,0]
 
-
+    #col and row are zero-based
+    def setFrame(self, col, row):
+        if col+1 > self.cols or row + 1 > self.rows:
+            raise Exception("col or row exceed max cols or rows")
+        #col and row are zero-based
+        self.frame = col + (row * self.rows)
+    
     def setFrame(self, frame):
+        #frame is zero-based
+        if frame > self.frames - 1:
+            raise Exception("frame exceed max frames")
         self.frame = frame
         
     def blitRotate(self, screen, image, pos, originPos, angle):
@@ -75,11 +87,12 @@ class SpriteSheet:
 
     def render(self, screen):
         if not self.done:
-            rect_frame = (self.frame * self.frameW , 0, self.frameW, self.frameH)
+            x_rect = (self.frame % self.cols) * self.frameW 
+            y_rect = (self.frame // (self.cols)) * self.frameH
+            rect_frame = (x_rect , y_rect , self.frameW, self.frameH)
             self.frameImage.fill ((0,0,0,0))
             self.frameImage.blit (self.image, (0,0), rect_frame) 
-            #if self.angle == 0:    
-            #    screen.blit (self.frameImage, self.pos)
+            #if self.angle == 0: screen.blit (self.frameImage, self.pos)
             #else:
             cRenderImage = self.frameImage.copy()  
             centerSprite =  (self.frameW//2,  self.frameH//2 )
@@ -87,15 +100,16 @@ class SpriteSheet:
             self.blitRotate(screen, cRenderImage, posRender, centerSprite, self.angle)
                
     def update(self):  
+        #update current frame 
         if self.speed > 0:
-            _frame = self.frame
-            _frame = _frame + self.speed 
-            if (self.once and _frame >= self.frames):
+            self.frameTemp = self.frameTemp + self.speed
+            if (self.once and self.frameTemp >= self.frames):
                 self.done = True
-            if _frame > self.frames: _frame = 0
-            #_frame = _frame % self.frames
-            self.frame = math.floor(_frame)
+            if self.frameTemp > self.frames: _frame = 0
+            self.frame = round(self.frameTemp)
+        #update rotation velocity
         if self.velRot != 0:
             self.angle += self.velRot
+        #update position according to velocity
         self.pos[0] = self.pos[0] + self.vel[0]
         self.pos[1] = self.pos[1] - self.vel[1]

@@ -40,14 +40,16 @@ def load_image(filename, transparent=False):
         image.set_colorkey(color, RLEACCEL)
     return image
 
-def texto(texto, posx, posy,  size, color=(255, 255, 255)):
-    fontfile = os.path.join (sys.path[0], 'fonts/ledger-Regular.ttf')
-    fuente = pygame.font.Font(fontfile, size)
-    salida = pygame.font.Font.render(fuente, texto, 1, color)
-    salida_rect = salida.get_rect()
-    salida_rect.centerx = posx
-    salida_rect.centery = posy
-    return salida, salida_rect
+def writeText(screen, text, posX, posY,  size, center = True, color=(255, 255, 255), ):
+    #font Press Start 2P Designed by CodeMan38 (Downloaded from googlefonts)
+    fontfile = os.path.join (sys.path[0], 'fonts/font.ttf')
+    font = pygame.font.Font(fontfile, size)
+    renderedText = pygame.font.Font.render(font, text, 1, color)  
+    renderedRect = renderedText.get_rect()
+    if center:
+        posX = posX - renderedRect.centerx
+        posY = posY - renderedRect.centery
+    screen.blit(renderedText, (posX, posY))
 
 def angleToVector(ang):
     return [math.cos(ang * TO_RADIAN), math.sin(ang * TO_RADIAN)]
@@ -89,18 +91,21 @@ def main():
     pygame.mixer.music.set_volume(0.3)
 
     run = True
+    countDownToGameOver = 120
+    gameOverFlag = False
     score = 0
     fuel = 100
     deflector = 100
     tankEmpty = False
     tankOnGame = False
+    #allAsteroids=[]
     explosions = []
     bullets = []
     bigAsteroids = []
     smallAsteroids = []
-    ship = sh.SpriteSheet('sprites/fighter.png', 0, 2, True)
+    ship = sh.SpriteSheet('sprites/fighter.png', 0, 2, 1, True)
     ship.pos = [WIDTH//2 - ship.frameW//2, HEIGHT//2 - ship.frameH//2]
-    tank = sh.SpriteSheet('sprites/shipcuadrado.png', 0, 1, True)
+    tank = sh.SpriteSheet('sprites/shipcuadrado.png', 0, 1, 1, True)
     tank.pos = [-tank.frameW, randint(0, HEIGHT)] #Offscreen
     clock = pygame.time.Clock()
     lastShot = pygame.time.get_ticks()
@@ -135,22 +140,17 @@ def main():
         for smallAsteroid in smallAsteroids:
             smallAsteroid.render(screen)
         
-        #draw fps text
-        fps, fps_rect = texto (str(int(clock.get_fps())), 30,700, 14)
-        screen.blit(fps, fps_rect)
-        #livesTxt, livesTxtRect = texto ("Lives: {}".format (lives), WIDTH-100, 30, 32)
-        #screen.blit(livesTxt, livesTxtRect)
-        scoreTxt, scoreTxtRect = texto ("Score: {}".format (score) , 100, 30, 32)
-        screen.blit(scoreTxt, scoreTxtRect)
+        #draw score
+        writeText (screen, str(int(clock.get_fps())), 5,735, 14, False)
+        writeText (screen, "Score: {}".format (score) , 20, 10, 24, False)
+
         #draw fuel
-        fuelTxt, fuelTxtRect = texto ("Fuel" , 505, 20, 22)
-        screen.blit(fuelTxt, fuelTxtRect)
+        writeText (screen, "Fuel" , 500, 20, 14)
         pygame.draw.rect(screen, (255,0,0), (450, 30 , 100, 10))
         pygame.draw.rect(screen, (0,255,0), (450, 30 , fuel, 10))
 
         #draw power Shield
-        deflectorTxt, deflectorTxtRect = texto ("Deflector" , 900, 20, 22)
-        screen.blit(deflectorTxt, deflectorTxtRect)
+        writeText (screen, "Deflector" , 900, 20, 14)
         pygame.draw.polygon(screen, (255,0,0), ((850, 40) , (950,40), (950,30)))
         pygame.draw.polygon(screen, (0,255,0), ((850, 40) , (850 + deflector,40), (850 + deflector, 40 - deflector * 0.1)))
         
@@ -165,13 +165,13 @@ def main():
                 sys.exit(0)
         
         #randomly appearance of bigAsteroids
-        if len(bigAsteroids) < 4:
-            anAsteroid = sh.SpriteSheet('sprites/asteroid.png', 0, 1, True, randintS(MAX_ROT_ASTEROID))
+        if len(bigAsteroids) < 4 and not gameOverFlag:
+            anAsteroid = sh.SpriteSheet('sprites/asteroid.png', 0, 1, 1, True, randintS(MAX_ROT_ASTEROID))
             anAsteroid.pos = [randint(0,WIDTH), randint(0, HEIGHT)] 
             anAsteroid.vel = [randintS(MAX_VEL_ASTEROID), randintS(MAX_VEL_ASTEROID)]
             bigAsteroids.append (anAsteroid)
 
-        #appearance of tank if running out of fuel and chance
+        #appearance of tank if running out of fuel and some random
         if  fuel < 40 and not tankOnGame and randint(0,100) < 10:
             tankOnGame = True
             tank.angle = randintS(70)
@@ -186,7 +186,7 @@ def main():
         if keys[K_SPACE]: 
             if (pygame.time.get_ticks() - lastShot) > 150:
                 acc = angleToVector(ship.angle)
-                aBullet = sh.SpriteSheet('sprites/bullet.png', 0, 1, True)
+                aBullet = sh.SpriteSheet('sprites/bullet.png', 0, 1, 1, True)
                 halfFrameWS = ship.frameW // 2 + 1
                 halfFrameHS = ship.frameH // 2 + 1
                 halfFrameWB = aBullet.frameW // 2 + 1
@@ -261,15 +261,12 @@ def main():
   
         if collide (ship, tank) and fuel < 100:
             fuel += 1
-
-        
-
-                    
+                 
         for bullet in bullets[:]:
             for bigAsteroid in bigAsteroids[:]:
                 if collide (bullet, bigAsteroid):
                     explosionSound.play()
-                    aExplosion = sh.SpriteSheet('sprites/bigredexplosion.png', 1, 13, True)
+                    aExplosion = sh.SpriteSheet('sprites/bigredexplosion.png', 1, 13, 1, True)
                     aExplosion.pos = [bigAsteroid.pos[0], bigAsteroid.pos[1]]
                     aExplosion.vel = [bigAsteroid.vel[0], bigAsteroid.vel[1]]
                     aExplosion.velRot = bigAsteroid.velRot
@@ -279,7 +276,7 @@ def main():
                     #spawnLittleAsteroids
                     spawnlist = []
                     for i in range (3):
-                        smallAsteroid = sh.SpriteSheet('sprites/smallasteroid.png', 0, 1, True, randintS(MAX_ROT_ASTEROID))
+                        smallAsteroid = sh.SpriteSheet('sprites/smallasteroid.png', 0, 1, 1, True, randintS(MAX_ROT_ASTEROID))
                         smallAsteroid.pos = [bigAsteroid.pos[0], bigAsteroid.pos[1]]
                         spawnlist.append (smallAsteroid)
                     spawnlist[0].vel = [-randint(1,3), -randint(1,3)]
@@ -298,7 +295,7 @@ def main():
             for smallAsteroid in smallAsteroids[:]:
                 if collide (bullet, smallAsteroid):
                     explosionSound.play()
-                    aExplosion = sh.SpriteSheet('sprites/redexplosion.png', 1, 13, True)
+                    aExplosion = sh.SpriteSheet('sprites/redexplosion.png', 1, 13, 1, True)
                     aExplosion.pos = [smallAsteroid.pos[0], smallAsteroid.pos[1]]
                     aExplosion.vel = [smallAsteroid.vel[0], smallAsteroid.vel[1]]
                     explosions.append (aExplosion)                  
@@ -321,11 +318,11 @@ def main():
             if collide(bigAsteroid, ship):
                 #blowing up big asteroid 
                 explosionSound.play()
-                aExplosion = sh.SpriteSheet('sprites/bigredexplosion.png', 1, 13, True)
+                aExplosion = sh.SpriteSheet('sprites/bigredexplosion.png', 1, 13, 1, True)
                 aExplosion.pos = [bigAsteroid.pos[0], bigAsteroid.pos[1]]
                 explosions.append (aExplosion)
                 #blowing up ship 
-                otherExplosion = sh.SpriteSheet('sprites/bigexplosion.png', 1, 24, True)
+                otherExplosion = sh.SpriteSheet('sprites/bigexplosion.png', 0.5, 24, 1, True)
                 otherExplosion.pos = [ship.pos[0], ship.pos[1]]
                 explosions.append (otherExplosion)
                 bigAsteroids.remove(bigAsteroid)
@@ -338,11 +335,11 @@ def main():
             if collide(smallAsteroid, ship):
                 #blowing up small asteroid 
                 explosionSound.play()
-                aExplosion = sh.SpriteSheet('sprites/redexplosion.png', 1, 13, True)
+                aExplosion = sh.SpriteSheet('sprites/redexplosion.png', 1, 13, 1, True)
                 aExplosion.pos = [bigAsteroid.pos[0], bigAsteroid.pos[1]]
                 explosions.append (aExplosion)
                 #blowing up ship
-                otherExplosion = sh.SpriteSheet('sprites/bigexplosion.png', 1, 24, True)
+                otherExplosion = sh.SpriteSheet('sprites/bigexplosion.png', 0.5, 24, 1, True)
                 otherExplosion.pos = [ship.pos[0], ship.pos[1]]
                 explosions.append (otherExplosion)
                 smallAsteroids.remove(smallAsteroid)
@@ -350,9 +347,34 @@ def main():
             if offScreen(smallAsteroid.pos):
                 smallAsteroids.remove(smallAsteroid)
 
+        if deflector < 10:
+            #SOUND ALARM
+            pass
+
         if deflector < 0: 
-            #run = False
-            gameOver()
+            if not gameOverFlag:
+                # big final ship explosion
+                #play finalSOUND
+                bigFinalExplosion = sh.SpriteSheet('sprites/bigexplosion2.png', 0.5 , 9, 9, True)
+                bigFinalExplosion.pos = [ship.pos[0], ship.pos[1]]
+                explosions.append (bigFinalExplosion)
+                bullets.clear()
+                #explote remaining asteroids and tank            
+                allAsteroids = (bigAsteroids + smallAsteroids)
+                allAsteroids.append(tank)
+                for asteroid in allAsteroids:
+                    aExplosion = sh.SpriteSheet('sprites/bigredexplosion.png', 0.5, 13, 1, True)
+                    aExplosion.pos = [asteroid.pos[0], asteroid.pos[1]]
+                    explosions.append (aExplosion)
+                bigAsteroids.clear()
+                smallAsteroids.clear()
+                tank.done = True
+                ship.done = True
+                gameOverFlag = True
+            #start countdown to gameover screen           
+            countDownToGameOver -=0.5
+            if countDownToGameOver < 0:
+                gameOver()
      
     return 0
 
@@ -361,8 +383,7 @@ def main_menu():
     run = True
     while run:
         screen.blit(background_image, (0, 0))
-        title_label = title_font.render("Insert Coin...", 1, (255,255,255))
-        screen.blit(title_label, (WIDTH/2 - title_label.get_width()/2, 350))
+        writeText (screen, "Insert Coin", WIDTH/2, 350, 30)
         pygame.display.update()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -381,10 +402,9 @@ def gameOver():
         rectangle.set_alpha(50)            # alpha level
         rectangle.fill((255,0,0))           # this fills the entire surface
         screen.blit(rectangle, (150,100))    
-        title_label = title_font.render("Game Over", 1, (255,0,0))
-        screen.blit(title_label, (WIDTH/2 - title_label.get_width()/2, 350))
-        coin_label = coin_font.render("Insert Coin", 1, (255,255,255))
-        screen.blit(coin_label, (WIDTH/2 - title_label.get_width()/2, 550))
+        #title_label = title_font.render("Game Over", 1, (255,0,0))
+        writeText (screen, "Game Over", WIDTH/2, 350, 60)
+        writeText (screen, "Insert Coin", WIDTH/2, 550, 30)
         pygame.display.update()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
