@@ -59,9 +59,6 @@ def offScreen (pos):
         return True
     return False
 
-def distance (pos1, pos2):
-    return (Math.sqrt(Math.pow(pos2[0] - pos1[0], 2) + Math.pow(pos2[1] - pos1[1], 2)))
-
 def collide(obj1, obj2):
     offset_x = int (obj2.pos[0] - obj1.pos[0])
     offset_y = int (obj2.pos[1] - obj1.pos[1])
@@ -88,7 +85,7 @@ def main():
     explosionSound = pygame.mixer.Sound(os.path.join (sys.path[0], "sounds/explosion.ogg"))
     thrustSound = pygame.mixer.Sound(os.path.join (sys.path[0], "sounds/thrust2.ogg"))
     music = pygame.mixer.music.load(os.path.join (sys.path[0], "sounds/soundtrack.ogg"))
-    pygame.mixer.music.set_volume(0.3)
+    pygame.mixer.music.set_volume(0.1)
 
     run = True
     countDownToGameOver = 120
@@ -322,7 +319,7 @@ def main():
                 aExplosion.pos = [bigAsteroid.pos[0], bigAsteroid.pos[1]]
                 explosions.append (aExplosion)
                 #blowing up ship 
-                otherExplosion = sh.SpriteSheet('sprites/bigexplosion.png', 0.5, 24, 1, True)
+                otherExplosion = sh.SpriteSheet('sprites/shield.png', 0.5, 4, 4, True)
                 otherExplosion.pos = [ship.pos[0], ship.pos[1]]
                 explosions.append (otherExplosion)
                 bigAsteroids.remove(bigAsteroid)
@@ -339,7 +336,7 @@ def main():
                 aExplosion.pos = [bigAsteroid.pos[0], bigAsteroid.pos[1]]
                 explosions.append (aExplosion)
                 #blowing up ship
-                otherExplosion = sh.SpriteSheet('sprites/bigexplosion.png', 0.5, 24, 1, True)
+                otherExplosion = sh.SpriteSheet('sprites/shield.png', 0.5, 4, 4, True)
                 otherExplosion.pos = [ship.pos[0], ship.pos[1]]
                 explosions.append (otherExplosion)
                 smallAsteroids.remove(smallAsteroid)
@@ -355,6 +352,7 @@ def main():
             if not gameOverFlag:
                 # big final ship explosion
                 #play finalSOUND
+                pygame.mixer.music.stop()
                 bigFinalExplosion = sh.SpriteSheet('sprites/bigexplosion2.png', 0.5 , 9, 9, True)
                 bigFinalExplosion.pos = [ship.pos[0], ship.pos[1]]
                 explosions.append (bigFinalExplosion)
