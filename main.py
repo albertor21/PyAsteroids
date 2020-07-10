@@ -18,13 +18,6 @@ SHIP_ROTATION_VEL = 3
 BULLET_SPEED = 30
 TO_RADIAN = math.pi / 180
 
-
-
-# Clases
-# ---------------------------------------------------------------------
-
-# ---------------------------------------------------------------------
- 
 # Funciones
 # ---------------------------------------------------------------------
 def load_image(filename, transparent=False):
@@ -54,8 +47,8 @@ def writeText(screen, text, posX, posY,  size, center = True, color=(255, 255, 2
 def angleToVector(ang):
     return [math.cos(ang * TO_RADIAN), math.sin(ang * TO_RADIAN)]
 
-def offScreen (pos):
-    if pos[0] < 0 or pos[0] > WIDTH or pos[1] > HEIGHT or pos[1] < 0:
+def offScreen (pos, width, height):
+    if pos[0] + width < 0 or pos[0] > WIDTH or pos[1] > HEIGHT or pos[1]+ height < 0:
         return True
     return False
 
@@ -64,45 +57,52 @@ def collide(obj1, obj2):
     offset_y = int (obj2.pos[1] - obj1.pos[1])
     return obj1.mask.overlap(obj2.mask, (offset_x, offset_y)) != None
 
-def randintS(limit): #randint from  -limit to limit
+def randintS(limit): #randint from -limit to limit
     return randint(-limit, limit)
-
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("PyAsteroids")
 pygame.mixer.init()
 background_image = load_image('sprites/background.png')
-background_image = load_image('sprites/background.png')
 
 # ---------------------------------------------------------------------
 def main():
     print (pygame.version.ver)
+    #sounds
+    bulletSound = pygame.mixer.Sound(os.path.join (sys.path[0], "sounds/missile.ogg"))
+    explosionSound = pygame.mixer.Sound(os.path.join (sys.path[0], "sounds/explosion.ogg"))
+    thrustSound = pygame.mixer.Sound(os.path.join (sys.path[0], "sounds/thrust.ogg"))
+    music = pygame.mixer.music.load(os.path.join (sys.path[0], "sounds/soundtrack.ogg"))
     
+    #images
+    bigAsteroidImg = load_image("sprites/asteroid.png", True)
+    smallAsteroidImg =  load_image("sprites/smallasteroid.png", True) 
+    shipImg =  load_image("sprites/fighter.png", True)
+    tankImg =  load_image("sprites/shipcuadrado.png", True)
+    bulletImg =  load_image("sprites/bullet.png", True)
+    bigRedExplosionImg =  load_image("sprites/bigredexplosion.png", True)
+    shieldImg = load_image("sprites/shield.png", True)
+    redExplosionImg = load_image("sprites/redexplosion.png", True)
+    finalExplosionImg = load_image("sprites/finalexplosion.png", True)
     scrolling_bg_image = load_image('sprites/scroll_bg.png')
     back_rect = scrolling_bg_image.get_rect()
 
-    bulletSound = pygame.mixer.Sound(os.path.join (sys.path[0], "sounds/missile.ogg"))
-    explosionSound = pygame.mixer.Sound(os.path.join (sys.path[0], "sounds/explosion.ogg"))
-    thrustSound = pygame.mixer.Sound(os.path.join (sys.path[0], "sounds/thrust2.ogg"))
-    music = pygame.mixer.music.load(os.path.join (sys.path[0], "sounds/soundtrack.ogg"))
-    pygame.mixer.music.set_volume(0.1)
 
     run = True
-    countDownToGameOver = 120
+    countDownToGameOver = 120 #frames
     gameOverFlag = False
     score = 0
     fuel = 100
     deflector = 100
     tankEmpty = False
     tankOnGame = False
-    #allAsteroids=[]
     explosions = []
     bullets = []
     bigAsteroids = []
     smallAsteroids = []
-    ship = sh.SpriteSheet('sprites/fighter.png', 0, 2, 1, True)
+    ship = sh.SpriteSheet(shipImg, 0, 2, 1, True)
     ship.pos = [WIDTH//2 - ship.frameW//2, HEIGHT//2 - ship.frameH//2]
-    tank = sh.SpriteSheet('sprites/shipcuadrado.png', 0, 1, 1, True)
+    tank = sh.SpriteSheet(tankImg, 0, 1, 1, True)
     tank.pos = [-tank.frameW, randint(0, HEIGHT)] #Offscreen
     clock = pygame.time.Clock()
     lastShot = pygame.time.get_ticks()
@@ -163,7 +163,7 @@ def main():
         
         #randomly appearance of bigAsteroids
         if len(bigAsteroids) < 4 and not gameOverFlag:
-            anAsteroid = sh.SpriteSheet('sprites/asteroid.png', 0, 1, 1, True, randintS(MAX_ROT_ASTEROID))
+            anAsteroid = sh.SpriteSheet(bigAsteroidImg, 0, 1, 1, True, randintS(MAX_ROT_ASTEROID))
             anAsteroid.pos = [randint(0,WIDTH), randint(0, HEIGHT)] 
             anAsteroid.vel = [randintS(MAX_VEL_ASTEROID), randintS(MAX_VEL_ASTEROID)]
             bigAsteroids.append (anAsteroid)
@@ -180,10 +180,14 @@ def main():
         ship.vel[1] *= 0.95
         
         #Control keyboard
+        if keys[K_q]: #debugging
+            global FPS
+            if FPS == 60: FPS = 5 
+            else: FPS = 60
         if keys[K_SPACE]: 
             if (pygame.time.get_ticks() - lastShot) > 150:
                 acc = angleToVector(ship.angle)
-                aBullet = sh.SpriteSheet('sprites/bullet.png', 0, 1, 1, True)
+                aBullet = sh.SpriteSheet(bulletImg, 0, 1, 1, True)
                 halfFrameWS = ship.frameW // 2 + 1
                 halfFrameHS = ship.frameH // 2 + 1
                 halfFrameWB = aBullet.frameW // 2 + 1
@@ -199,11 +203,11 @@ def main():
                 bullets.append (aBullet)
                 lastShot = pygame.time.get_ticks()
                 bulletSound.play()
-        if keys[K_s]:
+        if keys[K_m]:
             ship.angle -= SHIP_ROTATION_VEL
-        if keys[K_a]:
+        if keys[K_n]:
             ship.angle += SHIP_ROTATION_VEL
-        if keys[K_m]: 
+        if keys[K_a]: 
             ##Accelerate         
             if fuel > 0:
                 acc = angleToVector(ship.angle)
@@ -263,7 +267,7 @@ def main():
             for bigAsteroid in bigAsteroids[:]:
                 if collide (bullet, bigAsteroid):
                     explosionSound.play()
-                    aExplosion = sh.SpriteSheet('sprites/bigredexplosion.png', 1, 13, 1, True)
+                    aExplosion = sh.SpriteSheet(bigRedExplosionImg, 1, 13, 1, True)
                     aExplosion.pos = [bigAsteroid.pos[0], bigAsteroid.pos[1]]
                     aExplosion.vel = [bigAsteroid.vel[0], bigAsteroid.vel[1]]
                     aExplosion.velRot = bigAsteroid.velRot
@@ -273,7 +277,7 @@ def main():
                     #spawnLittleAsteroids
                     spawnlist = []
                     for i in range (3):
-                        smallAsteroid = sh.SpriteSheet('sprites/smallasteroid.png', 0, 1, 1, True, randintS(MAX_ROT_ASTEROID))
+                        smallAsteroid = sh.SpriteSheet(smallAsteroidImg, 0, 1, 1, True, randintS(MAX_ROT_ASTEROID))
                         smallAsteroid.pos = [bigAsteroid.pos[0], bigAsteroid.pos[1]]
                         spawnlist.append (smallAsteroid)
                     spawnlist[0].vel = [-randint(1,3), -randint(1,3)]
@@ -292,7 +296,7 @@ def main():
             for smallAsteroid in smallAsteroids[:]:
                 if collide (bullet, smallAsteroid):
                     explosionSound.play()
-                    aExplosion = sh.SpriteSheet('sprites/redexplosion.png', 1, 13, 1, True)
+                    aExplosion = sh.SpriteSheet(redExplosionImg, 1, 13, 1, True)
                     aExplosion.pos = [smallAsteroid.pos[0], smallAsteroid.pos[1]]
                     aExplosion.vel = [smallAsteroid.vel[0], smallAsteroid.vel[1]]
                     explosions.append (aExplosion)                  
@@ -307,7 +311,7 @@ def main():
         
         for bullet in bullets[:]:
             bullet.update()
-            if offScreen(bullet.pos):
+            if offScreen(bullet.pos, bullet.frameW, bullet.frameH):
                 bullets.remove(bullet)
 
         for bigAsteroid in bigAsteroids[:]:
@@ -315,16 +319,19 @@ def main():
             if collide(bigAsteroid, ship):
                 #blowing up big asteroid 
                 explosionSound.play()
-                aExplosion = sh.SpriteSheet('sprites/bigredexplosion.png', 1, 13, 1, True)
+                aExplosion = sh.SpriteSheet(bigRedExplosionImg, 1, 13, 1, True)
                 aExplosion.pos = [bigAsteroid.pos[0], bigAsteroid.pos[1]]
                 explosions.append (aExplosion)
-                #blowing up ship 
-                otherExplosion = sh.SpriteSheet('sprites/shield.png', 0.5, 4, 4, True)
-                otherExplosion.pos = [ship.pos[0], ship.pos[1]]
+                #shield explosion
+                otherExplosion = sh.SpriteSheet(shieldImg, 0.5, 4, 4, True)                
+                diffCenterX = otherExplosion.centerX-ship.centerX
+                diffCenterY = otherExplosion.centerY-ship.centerY
+                otherExplosion.pos = [ship.pos[0]-diffCenterX, ship.pos[1]-diffCenterX] 
+                otherExplosion.vel = [ship.vel[0], ship.vel[1]]               
                 explosions.append (otherExplosion)
                 bigAsteroids.remove(bigAsteroid)
                 deflector -=10
-            if offScreen(bigAsteroid.pos):
+            if offScreen(bigAsteroid.pos, bigAsteroid.frameW, bigAsteroid.frameH):
                 bigAsteroids.remove(bigAsteroid)
 
         for smallAsteroid in smallAsteroids[:]:
@@ -332,16 +339,17 @@ def main():
             if collide(smallAsteroid, ship):
                 #blowing up small asteroid 
                 explosionSound.play()
-                aExplosion = sh.SpriteSheet('sprites/redexplosion.png', 1, 13, 1, True)
+                aExplosion = sh.SpriteSheet(redexplosionImg, 1, 13, 1, True)
                 aExplosion.pos = [bigAsteroid.pos[0], bigAsteroid.pos[1]]
                 explosions.append (aExplosion)
                 #blowing up ship
-                otherExplosion = sh.SpriteSheet('sprites/shield.png', 0.5, 4, 4, True)
+                otherExplosion = sh.SpriteSheet(shieldImg, 0.5, 4, 4, True)
                 otherExplosion.pos = [ship.pos[0], ship.pos[1]]
+                otherExplosion.vel = [ship.vel[0], ship.vel[1]]
                 explosions.append (otherExplosion)
                 smallAsteroids.remove(smallAsteroid)
                 deflector -= 5
-            if offScreen(smallAsteroid.pos):
+            if offScreen(smallAsteroid.pos, smallAsteroid.frameW, smallAsteroid.frameH):
                 smallAsteroids.remove(smallAsteroid)
 
         if deflector < 10:
@@ -353,16 +361,18 @@ def main():
                 # big final ship explosion
                 #play finalSOUND
                 pygame.mixer.music.stop()
-                bigFinalExplosion = sh.SpriteSheet('sprites/bigexplosion2.png', 0.5 , 9, 9, True)
+                bigFinalExplosion = sh.SpriteSheet(finalExplosionImg, 0.3 , 9, 9, True)
                 bigFinalExplosion.pos = [ship.pos[0], ship.pos[1]]
+                bigFinalExplosion.vel = [ship.vel[0], ship.vel[1]]
                 explosions.append (bigFinalExplosion)
                 bullets.clear()
-                #explote remaining asteroids and tank            
+                #explote remaining asteroids and tank (remaining items on screen)         
                 allAsteroids = (bigAsteroids + smallAsteroids)
                 allAsteroids.append(tank)
                 for asteroid in allAsteroids:
-                    aExplosion = sh.SpriteSheet('sprites/bigredexplosion.png', 0.5, 13, 1, True)
+                    aExplosion = sh.SpriteSheet(bigredExplosionImg, 0.5, 13, 1, True)
                     aExplosion.pos = [asteroid.pos[0], asteroid.pos[1]]
+                    aExplosion.vel = [asteroid.vel[0], asteroid.vel[1]]
                     explosions.append (aExplosion)
                 bigAsteroids.clear()
                 smallAsteroids.clear()

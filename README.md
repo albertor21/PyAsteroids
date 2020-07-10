@@ -1,7 +1,8 @@
 # PyAsteroids
-intento de Asteroids con Pygame
+
+Asteroids-like with Pygame
 
 #todo list
- highest score
- increasing difficulty
- asteroid IA
+highest score
+increasing difficulty
+asteroid IA

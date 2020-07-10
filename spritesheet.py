@@ -25,9 +25,11 @@ class SpriteSheet:
             image.set_colorkey(color, RLEACCEL)
         return image
 
-    def __init__(self, filename, speed, cols, rows, once, velRot = 0, frame = 0):
+    #def __init__(self, filename, speed, cols, rows, once, velRot = 0, frame = 0):
+    def __init__(self, image, speed, cols, rows, once, velRot = 0, frame = 0):
         #pygame.sprite.Sprite.__init__(self)
-        self.image = self.load_image(filename, True)
+        #self.image = self.load_image(filename, True)
+        self.image = image
         self.rect = self.image.get_rect()      
         self.speed = speed
         self.cols = cols #number of cols
@@ -37,6 +39,8 @@ class SpriteSheet:
         self.done = False #animation done (if once)
         self.frameW = int(self.rect.width / cols)
         self.frameH = int (self.rect.height / rows)
+        self.centerX = int(self.frameW / 2)
+        self.centerY = int (self.frameH / 2)
         self.frame = frame #current frame (zero-based)
         self.frameTemp = frame #(float) use to increase frame number according to speed
         self.frameImage = pygame.Surface ((self.frameW, self.frameH), flags=SRCALPHA) #current image frame
