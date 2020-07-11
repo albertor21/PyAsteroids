@@ -72,6 +72,9 @@ def main():
     bulletSound = pygame.mixer.Sound(os.path.join (sys.path[0], "sounds/missile.ogg"))
     explosionSound = pygame.mixer.Sound(os.path.join (sys.path[0], "sounds/explosion.ogg"))
     thrustSound = pygame.mixer.Sound(os.path.join (sys.path[0], "sounds/thrust.ogg"))
+    alarmSound = pygame.mixer.Sound(os.path.join (sys.path[0], "sounds/alarm.ogg"))
+    finalBoomSound = pygame.mixer.Sound(os.path.join (sys.path[0], "sounds/finalboom.ogg"))
+
     music = pygame.mixer.music.load(os.path.join (sys.path[0], "sounds/soundtrack.ogg"))
     
     #images
@@ -181,9 +184,10 @@ def main():
         
         #Control keyboard
         if keys[K_q]: #debugging
-            global FPS
-            if FPS == 60: FPS = 5 
-            else: FPS = 60
+            #global FPS
+            #if FPS == 60: FPS = 5 
+            #else: FPS = 60
+            pass
         if keys[K_SPACE]: 
             if (pygame.time.get_ticks() - lastShot) > 150:
                 acc = angleToVector(ship.angle)
@@ -203,11 +207,11 @@ def main():
                 bullets.append (aBullet)
                 lastShot = pygame.time.get_ticks()
                 bulletSound.play()
-        if keys[K_m]:
+        if keys[K_s]: #right
             ship.angle -= SHIP_ROTATION_VEL
-        if keys[K_n]:
+        if keys[K_a]: #left
             ship.angle += SHIP_ROTATION_VEL
-        if keys[K_a]: 
+        if keys[K_m]: #fire
             ##Accelerate         
             if fuel > 0:
                 acc = angleToVector(ship.angle)
@@ -254,7 +258,7 @@ def main():
            
         tank.update()
         ship.update()
-        deflector -= 0.05 #deflector power decreases anyway with time
+        deflector -= 0.01 #deflector power decreases anyway with time
         for explosion in explosions[:]:
             explosion.update()
             if explosion.done:
@@ -339,12 +343,14 @@ def main():
             if collide(smallAsteroid, ship):
                 #blowing up small asteroid 
                 explosionSound.play()
-                aExplosion = sh.SpriteSheet(redexplosionImg, 1, 13, 1, True)
+                aExplosion = sh.SpriteSheet(redExplosionImg, 1, 13, 1, True)
                 aExplosion.pos = [bigAsteroid.pos[0], bigAsteroid.pos[1]]
                 explosions.append (aExplosion)
                 #blowing up ship
                 otherExplosion = sh.SpriteSheet(shieldImg, 0.5, 4, 4, True)
-                otherExplosion.pos = [ship.pos[0], ship.pos[1]]
+                diffCenterX = otherExplosion.centerX-ship.centerX
+                diffCenterY = otherExplosion.centerY-ship.centerY
+                otherExplosion.pos = [ship.pos[0]-diffCenterX, ship.pos[1]-diffCenterX] 
                 otherExplosion.vel = [ship.vel[0], ship.vel[1]]
                 explosions.append (otherExplosion)
                 smallAsteroids.remove(smallAsteroid)
@@ -352,15 +358,19 @@ def main():
             if offScreen(smallAsteroid.pos, smallAsteroid.frameW, smallAsteroid.frameH):
                 smallAsteroids.remove(smallAsteroid)
 
-        if deflector < 10:
+        if deflector < 30 and deflector > 0:
             #SOUND ALARM
-            pass
+            alarmSound.play()
 
         if deflector < 0: 
             if not gameOverFlag:
-                # big final ship explosion
+                #stop all sounds
+                alarmSound.stop()
+                bulletSound.stop()
+                explosionSound.stop()
+                thrustSound.stop()
                 #play finalSOUND
-                pygame.mixer.music.stop()
+                finalBoomSound.play()
                 bigFinalExplosion = sh.SpriteSheet(finalExplosionImg, 0.3 , 9, 9, True)
                 bigFinalExplosion.pos = [ship.pos[0], ship.pos[1]]
                 bigFinalExplosion.vel = [ship.vel[0], ship.vel[1]]
@@ -370,7 +380,7 @@ def main():
                 allAsteroids = (bigAsteroids + smallAsteroids)
                 allAsteroids.append(tank)
                 for asteroid in allAsteroids:
-                    aExplosion = sh.SpriteSheet(bigredExplosionImg, 0.5, 13, 1, True)
+                    aExplosion = sh.SpriteSheet(bigRedExplosionImg, 0.5, 13, 1, True)
                     aExplosion.pos = [asteroid.pos[0], asteroid.pos[1]]
                     aExplosion.vel = [asteroid.vel[0], asteroid.vel[1]]
                     explosions.append (aExplosion)
@@ -410,7 +420,6 @@ def gameOver():
         rectangle.set_alpha(50)            # alpha level
         rectangle.fill((255,0,0))           # this fills the entire surface
         screen.blit(rectangle, (150,100))    
-        #title_label = title_font.render("Game Over", 1, (255,0,0))
         writeText (screen, "Game Over", WIDTH/2, 350, 60)
         writeText (screen, "Insert Coin", WIDTH/2, 550, 30)
         pygame.display.update()
