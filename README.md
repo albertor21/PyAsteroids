@@ -4,5 +4,5 @@ Asteroids-like with Pygame
 
 #todo list
 highest score
-increasing difficulty
+DONE increasing difficulty
 asteroid IA
