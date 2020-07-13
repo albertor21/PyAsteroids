@@ -10,12 +10,12 @@ import math
 FPS = 60
 WIDTH = 1000
 HEIGHT = 750
-MAX_VEL_SHIP = 4 #ship's max velocity
-MAX_VEL_TANK = 2
-MAX_VEL_ASTEROID = 3
-MAX_ROT_ASTEROID = 4
-SHIP_ROTATION_VEL = 3
-BULLET_SPEED = 30
+MAX_VEL_SHIP = FPS // 15 
+MAX_VEL_TANK = FPS // 30
+MAX_VEL_ASTEROID = 5
+MAX_ROT_ASTEROID = FPS // 15
+SHIP_ROTATION_VEL = FPS // 20
+BULLET_SPEED = FPS // 2
 TO_RADIAN = math.pi / 180
 
 # Funciones
@@ -60,6 +60,9 @@ def collide(obj1, obj2):
 def randintS(limit): #randint from -limit to limit
     return randint(-limit, limit)
 
+def distance (pos1, pos2):
+    return math.sqrt(((pos1[0]-pos2[0])**2)+((pos1[1]-pos2[1])**2))
+
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("PyAsteroids")
 pygame.mixer.init()
@@ -80,7 +83,8 @@ def main():
     #images
     bigAsteroidImg = load_image("sprites/asteroid.png", True)
     smallAsteroidImg =  load_image("sprites/smallasteroid.png", True) 
-    shipImg =  load_image("sprites/fighter.png", True)
+    #shipImg =  load_image("sprites/fighter.png", True)
+    shipImg =  load_image("sprites/spaceship.png", True)
     tankImg =  load_image("sprites/shipcuadrado.png", True)
     bulletImg =  load_image("sprites/bullet.png", True)
     bigRedExplosionImg =  load_image("sprites/bigredexplosion.png", True)
@@ -167,13 +171,18 @@ def main():
             if eventos.type == QUIT:
                 sys.exit(0)
         
-        #randomly appearance of bigAsteroids
-        #no more than 12 asteroids
-        if len(bigAsteroids) < 4 + (score//500) and  not len(bigAsteroids) > 14 and not gameOverFlag:
-            anAsteroid = sh.SpriteSheet(bigAsteroidImg, 0, 1, 1, True, randintS(MAX_ROT_ASTEROID))
-            anAsteroid.pos = [randint(0,WIDTH), randint(0, HEIGHT)] 
-            anAsteroid.vel = [randintS(MAX_VEL_ASTEROID), randintS(MAX_VEL_ASTEROID)]
-            bigAsteroids.append (anAsteroid)
+        #randomly appearance of bigAsteroids 400 pixels far from ship
+        #no more than 14 asteroids
+        if len(bigAsteroids) < 4 + (score//500) and not len(bigAsteroids) > 14 and not gameOverFlag:
+            randomPos = [randint(0,WIDTH), randint(0, HEIGHT)] 
+            currshipPos = ship.pos
+            if distance (randomPos, currshipPos) > 400:
+                anAsteroid = sh.SpriteSheet(bigAsteroidImg, 0, 1, 1, True, randintS(MAX_ROT_ASTEROID))
+                anAsteroid.pos = randomPos
+                velVector = [currshipPos[0]-randomPos[0], randomPos[1]- currshipPos[1]]
+                vel = [velVector[0] * MAX_VEL_ASTEROID / 1000, velVector[1] * MAX_VEL_ASTEROID / 1000]
+                anAsteroid.vel = vel
+                bigAsteroids.append (anAsteroid)
 
         #appearance of tank if running out of fuel and some random
         if  fuel < 40 and not tankOnGame and randint(0,100) < 10:
