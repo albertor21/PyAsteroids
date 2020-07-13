@@ -83,8 +83,8 @@ def main():
     #images
     bigAsteroidImg = load_image("sprites/asteroid.png", True)
     smallAsteroidImg =  load_image("sprites/smallasteroid.png", True) 
-    #shipImg =  load_image("sprites/fighter.png", True)
-    shipImg =  load_image("sprites/spaceship.png", True)
+    shipImg =  load_image("sprites/fighter.png", True)
+    #shipImg =  load_image("sprites/spaceship.png", True)
     tankImg =  load_image("sprites/shipcuadrado.png", True)
     bulletImg =  load_image("sprites/bullet.png", True)
     bigRedExplosionImg =  load_image("sprites/bigredexplosion.png", True)
@@ -175,11 +175,10 @@ def main():
         #no more than 14 asteroids
         if len(bigAsteroids) < 4 + (score//500) and not len(bigAsteroids) > 14 and not gameOverFlag:
             randomPos = [randint(0,WIDTH), randint(0, HEIGHT)] 
-            currshipPos = ship.pos
-            if distance (randomPos, currshipPos) > 400:
+            if distance (randomPos, ship.pos) > 400:
                 anAsteroid = sh.SpriteSheet(bigAsteroidImg, 0, 1, 1, True, randintS(MAX_ROT_ASTEROID))
                 anAsteroid.pos = randomPos
-                velVector = [currshipPos[0]-randomPos[0], randomPos[1]- currshipPos[1]]
+                velVector = [ship.pos[0]-randomPos[0], randomPos[1]- ship.pos[1]]
                 vel = [velVector[0] * MAX_VEL_ASTEROID / 1000, velVector[1] * MAX_VEL_ASTEROID / 1000]
                 anAsteroid.vel = vel
                 bigAsteroids.append (anAsteroid)
