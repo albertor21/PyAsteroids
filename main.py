@@ -83,8 +83,8 @@ def main():
     #images
     bigAsteroidImg = load_image("sprites/asteroid.png", True)
     smallAsteroidImg =  load_image("sprites/smallasteroid.png", True) 
-    shipImg =  load_image("sprites/fighter.png", True)
-    #shipImg =  load_image("sprites/spaceship.png", True)
+    #shipImg =  load_image("sprites/fighter.png", True)
+    shipImg =  load_image("sprites/spaceship.png", True)
     tankImg =  load_image("sprites/shipcuadrado.png", True)
     bulletImg =  load_image("sprites/bullet.png", True)
     bigRedExplosionImg =  load_image("sprites/bigredexplosion.png", True)
