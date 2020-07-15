@@ -1,24 +1,23 @@
-
-# Módulos
 import sys, pygame, os
 from random import randint
 from pygame.locals import *
 import spritesheet as sh
 import math
 
-# Constantes
+# Constants
 FPS = 60
 WIDTH = 1000
 HEIGHT = 750
 MAX_VEL_SHIP = FPS // 15 
 MAX_VEL_TANK = FPS // 30
+MAX_NUM_ASTEROIDS = 14
 MAX_VEL_ASTEROID = 5
 MAX_ROT_ASTEROID = FPS // 15
 SHIP_ROTATION_VEL = FPS // 20
 BULLET_SPEED = FPS // 2
 TO_RADIAN = math.pi / 180
 
-# Funciones
+# functions
 # ---------------------------------------------------------------------
 def load_image(filename, transparent=False):
     try: 
@@ -33,29 +32,26 @@ def load_image(filename, transparent=False):
         image.set_colorkey(color, RLEACCEL)
     return image
 
-def writeText(screen, text, posX, posY,  size, center = True, color=(255, 255, 255), ):
+def writeText(screen, text, posX, posY,  size, center = True, color=(255, 255, 255)):
     #font Press Start 2P Designed by CodeMan38 (Downloaded from googlefonts)
     fontfile = os.path.join (sys.path[0], 'fonts/font.ttf')
     font = pygame.font.Font(fontfile, size)
     renderedText = pygame.font.Font.render(font, text, 1, color)  
-    renderedRect = renderedText.get_rect()
     if center:
-        posX = posX - renderedRect.centerx
-        posY = posY - renderedRect.centery
+        posX = posX - renderedText.get_rect().centerx
+        posY = posY - renderedText.get_rect().centery
     screen.blit(renderedText, (posX, posY))
 
 def angleToVector(ang):
     return [math.cos(ang * TO_RADIAN), math.sin(ang * TO_RADIAN)]
 
 def offScreen (pos, width, height):
-    if pos[0] + width < 0 or pos[0] > WIDTH or pos[1] > HEIGHT or pos[1]+ height < 0:
-        return True
-    return False
+    return (pos[0] + width < 0 or pos[0] > WIDTH or pos[1] > HEIGHT or pos[1]+ height < 0)
 
-def collide(obj1, obj2):
-    offset_x = int (obj2.pos[0] - obj1.pos[0])
-    offset_y = int (obj2.pos[1] - obj1.pos[1])
-    return obj1.mask.overlap(obj2.mask, (offset_x, offset_y)) != None
+def collide(sprite1, sprite2):
+    offset_x = int (sprite2.pos[0] - sprite1.pos[0])
+    offset_y = int (sprite2.pos[1] - sprite1.pos[1])
+    return sprite1.mask.overlap(sprite2.mask, (offset_x, offset_y)) != None
 
 def randintS(limit): #randint from -limit to limit
     return randint(-limit, limit)
@@ -115,10 +111,13 @@ def main():
     screen.blit(background_image, (0, 0))
     pygame.mixer.music.play(-1) # -1 will ensure the song keeps looping
 
-    def createExplosion (image, speed, col, row, pos, vel):
+    def createExplosion (image, speed, col, row, onSprite):  
         explosionSound.play()
         aExplosion = sh.SpriteSheet(image,speed ,col, row, True)
-        aExplosion.pos = [pos[0],pos[1]]
+        diffCenterX = aExplosion.centerX-onSprite.centerX
+        diffCenterY = aExplosion.centerY-onSprite.centerY
+        posCentered = [onSprite.pos[0]-diffCenterX, onSprite.pos[1]-diffCenterX] 
+        aExplosion.pos = [posCentered[0], posCentered[1]] 
         aExplosion.vel = [vel[0], vel[1]]
         return aExplosion
 
@@ -131,9 +130,8 @@ def main():
         back_rect.move_ip(-1, 0)
         if back_rect.right == 0:
             back_rect.x = 0
-        #draw ship
+        #draw ship and tank
         ship.render(screen)
-        #draw tank
         tank.render(screen)
         #draw bullets
         for bullet in bullets:
@@ -141,11 +139,9 @@ def main():
         #draw explosions
         for explosion in explosions:
             explosion.render(screen)
-
-        #draw asteroids
+        #draw asteroids big and small
         for bigAsteroid in bigAsteroids:
             bigAsteroid.render(screen)
-
         for smallAsteroid in smallAsteroids:
             smallAsteroid.render(screen)
         
@@ -168,17 +164,19 @@ def main():
         
         #repaint screen
         pygame.display.update()
-    
+
+    #main game loop
     while run:
         time = clock.tick(FPS)
         keys = pygame.key.get_pressed()
         for eventos in pygame.event.get():
             if eventos.type == QUIT:
                 sys.exit(0)
-        
-        #randomly appearance of bigAsteroids 400 pixels far from ship
-        #no more than 14 asteroids
-        if len(bigAsteroids) < 4 + (score//500) and not len(bigAsteroids) > 14 and not gameOverFlag:
+         ###########################draw area################################
+        redrawWindow(screen)
+        #randomly appearance of bigAsteroids 400 pixels away from ship
+        #no more than MAX_ASTEROIDS asteroids
+        if len(bigAsteroids) < 4 + (score//500) and not len(bigAsteroids) > MAX_NUM_ASTEROIDS and not gameOverFlag:
             randomPos = [randint(0,WIDTH), randint(0, HEIGHT)] 
             if distance (randomPos, ship.pos) > 400:
                 anAsteroid = sh.SpriteSheet(bigAsteroidImg, 0, 1, 1, True, randintS(MAX_ROT_ASTEROID))
@@ -188,11 +186,6 @@ def main():
                 anAsteroid.vel = vel
                 bigAsteroids.append (anAsteroid)
 
-        #appearance of tank if running out of fuel and some random
-        if  fuel < 40 and not tankOnGame and randint(0,100) < 10:
-            tankOnGame = True
-            tank.angle = randintS(70)
-            tank.vel = angleToVector(tank.angle) * MAX_VEL_TANK
 
         #when not thrusting
         ship.setFrame(0)
@@ -242,17 +235,18 @@ def main():
                 fuel -= 0.10 
       
         #when decelerating
-        if (abs(lastvelocity[0]) - abs(ship.vel[0])) > 1 or (abs(lastvelocity[1]) - abs(ship.vel[1])) > 1 :
+        if (abs(lastvelocity[0]) > abs(ship.vel[0]))  or (abs(lastvelocity[1]) > abs(ship.vel[1])):
             thrustSound.stop()
             
         #reappearing ship
-        if (ship.pos[0] < 0):
-            ship.pos[0] = WIDTH - ship.frameW
         ship.pos[0] = ship.pos[0] % WIDTH
-
-        if (ship.pos[1] < 0):
-            ship.pos[1] = HEIGHT - ship.frameH
         ship.pos[1] = ship.pos[1] % HEIGHT
+
+        #appearance of tank if running out of fuel and some random delay and not already on screen
+        if  fuel < 40 and not tankOnGame and randint(0,100) < 10:
+            tankOnGame = True
+            tank.angle = randintS(70)
+            tank.vel = angleToVector(tank.angle) * MAX_VEL_TANK
 
         #resetting tank position and vel if tank goes offscreen
         if (tank.pos[0] > WIDTH) or tank.pos[1] > HEIGHT:
@@ -260,12 +254,8 @@ def main():
             tank.vel = [0,0]
             tankOnGame = False        
 
-        if (ship.pos[1] < 0):
-            ship.pos[1] = HEIGHT - ship.frameH
-        ship.pos[1] = ship.pos[1] % HEIGHT
-
     ###########################draw area################################
-        redrawWindow(screen)
+        #redrawWindow(screen)
     ############################update area#############################        
            
         tank.update()
@@ -282,7 +272,7 @@ def main():
         for bullet in bullets[:]:
             for bigAsteroid in bigAsteroids[:]:
                 if collide (bullet, bigAsteroid):
-                    aExplosion = createExplosion (bigRedExplosionImg, 1, 13, 1, bigAsteroid.pos, bigAsteroid.vel )
+                    aExplosion = createExplosion (bigRedExplosionImg, 1, 13, 1, bigAsteroid )
                     explosions.append (aExplosion)  
                     if deflector <100:
                         deflector+= 1                
@@ -327,15 +317,11 @@ def main():
             bigAsteroid.update()
             if collide(bigAsteroid, ship):
                 #blowing up big asteroid 
-                aExplosion = createExplosion (bigRedExplosionImg, 1, 13, 1, smallAsteroid.pos, smallAsteroid.vel )
+                aExplosion = createExplosion (bigRedExplosionImg, 1, 13, 1, ship )
                 explosions.append (aExplosion)
-                #shield explosion
-                otherExplosion = sh.SpriteSheet(shieldImg, 0.5, 4, 4, True)                
-                diffCenterX = otherExplosion.centerX-ship.centerX
-                diffCenterY = otherExplosion.centerY-ship.centerY
-                otherExplosion.pos = [ship.pos[0]-diffCenterX, ship.pos[1]-diffCenterX] 
-                otherExplosion.vel = [ship.vel[0], ship.vel[1]]               
-                explosions.append (otherExplosion)
+                #shield explosion 
+                shieldExplosion = createExplosion (shieldImg, 1, 4, 4, ship )   
+                explosions.append (shieldExplosion)
                 bigAsteroids.remove(bigAsteroid)
                 deflector -=20
             if offScreen(bigAsteroid.pos, bigAsteroid.frameW, bigAsteroid.frameH):
@@ -345,15 +331,11 @@ def main():
             smallAsteroid.update()
             if collide(smallAsteroid, ship):
                 #blowing up small asteroid 
-                aExplosion = createExplosion (redExplosionImg, 1, 13, 1, True, smallAsteroid.pos, smallAsteroid.vel )                
+                aExplosion = createExplosion (redExplosionImg, 1, 13, 1, True, smallAsteroid )                
                 explosions.append (aExplosion)
                 #ship shield explosion
-                otherExplosion = sh.SpriteSheet(shieldImg, 0.5, 4, 4, True)
-                diffCenterX = otherExplosion.centerX-ship.centerX
-                diffCenterY = otherExplosion.centerY-ship.centerY
-                otherExplosion.pos = [ship.pos[0]-diffCenterX, ship.pos[1]-diffCenterX] 
-                otherExplosion.vel = [ship.vel[0], ship.vel[1]]
-                explosions.append (otherExplosion)
+                shieldExplosion = createExplosion (shieldImg, 1, 4, 4, ship ) 
+                explosions.append (shieldExplosion)
                 smallAsteroids.remove(smallAsteroid)
                 deflector -= 10
             if offScreen(smallAsteroid.pos, smallAsteroid.frameW, smallAsteroid.frameH):
@@ -371,18 +353,15 @@ def main():
                 explosionSound.stop()
                 thrustSound.stop()
                 finalBoomSound.play()
-                bigFinalExplosion = sh.SpriteSheet(finalExplosionImg, 0.3 , 9, 9, True)
-                bigFinalExplosion.pos = [ship.pos[0], ship.pos[1]]
-                bigFinalExplosion.vel = [ship.vel[0], ship.vel[1]]
-                explosions.append (bigFinalExplosion)
+
                 bullets.clear()
+                bigFinalExplosion = createExplosion (finalExplosionImg, 0.3, 9, 9, ship )                
+                explosions.append (bigFinalExplosion) 
                 #explote remaining asteroids and tank (remaining items on screen)         
                 allItems = (bigAsteroids + smallAsteroids)
                 allItems.append(tank)
                 for asteroid in allItems:
-                    aExplosion = sh.SpriteSheet(bigRedExplosionImg, 0.5, 13, 1, True)
-                    aExplosion.pos = [asteroid.pos[0], asteroid.pos[1]]
-                    aExplosion.vel = [asteroid.vel[0], asteroid.vel[1]]
+                    aExplosion = createExplosion (bigRedExplosionImg, 0.5, 13, 1, asteroid )
                     explosions.append (aExplosion)
                 bigAsteroids.clear()
                 smallAsteroids.clear()
@@ -425,7 +404,7 @@ def gameOver():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 main()
     pygame.quit()
-    sys.exit ()
+    sys.exit(0)
 
  
 if __name__ == '__main__':
