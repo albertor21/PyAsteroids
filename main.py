@@ -118,7 +118,7 @@ def main():
         diffCenterY = aExplosion.centerY-onSprite.centerY
         posCentered = [onSprite.pos[0]-diffCenterX, onSprite.pos[1]-diffCenterX] 
         aExplosion.pos = [posCentered[0], posCentered[1]] 
-        aExplosion.vel = [vel[0], vel[1]]
+        aExplosion.vel = [onSprite.vel[0], onSprite.vel[1]]
         return aExplosion
 
     def redrawWindow(screen):
@@ -185,7 +185,6 @@ def main():
                 vel = [velVector[0] * MAX_VEL_ASTEROID / 1000, velVector[1] * MAX_VEL_ASTEROID / 1000]
                 anAsteroid.vel = vel
                 bigAsteroids.append (anAsteroid)
-
 
         #when not thrusting
         ship.setFrame(0)
@@ -297,7 +296,7 @@ def main():
         for bullet in bullets[:]:
             for smallAsteroid in smallAsteroids[:]:
                 if collide (bullet, smallAsteroid):
-                    aExplosion = createExplosion (redExplosionImg, 1, 13, 1, smallAsteroid.pos, smallAsteroid.vel )
+                    aExplosion = createExplosion (redExplosionImg, 1, 13, 1, smallAsteroid )
                     explosions.append (aExplosion)                  
                     smallAsteroids.remove(smallAsteroid)
                     if deflector <100:
@@ -317,10 +316,10 @@ def main():
             bigAsteroid.update()
             if collide(bigAsteroid, ship):
                 #blowing up big asteroid 
-                aExplosion = createExplosion (bigRedExplosionImg, 1, 13, 1, ship )
+                aExplosion = createExplosion (bigRedExplosionImg, 1, 13, 1, ship)
                 explosions.append (aExplosion)
                 #shield explosion 
-                shieldExplosion = createExplosion (shieldImg, 1, 4, 4, ship )   
+                shieldExplosion = createExplosion (shieldImg, 1, 4, 4, ship)   
                 explosions.append (shieldExplosion)
                 bigAsteroids.remove(bigAsteroid)
                 deflector -=20
@@ -331,10 +330,10 @@ def main():
             smallAsteroid.update()
             if collide(smallAsteroid, ship):
                 #blowing up small asteroid 
-                aExplosion = createExplosion (redExplosionImg, 1, 13, 1, True, smallAsteroid )                
+                aExplosion = createExplosion (redExplosionImg, 1, 13, 1, smallAsteroid)                
                 explosions.append (aExplosion)
                 #ship shield explosion
-                shieldExplosion = createExplosion (shieldImg, 1, 4, 4, ship ) 
+                shieldExplosion = createExplosion (shieldImg, 1, 4, 4, ship) 
                 explosions.append (shieldExplosion)
                 smallAsteroids.remove(smallAsteroid)
                 deflector -= 10
@@ -406,7 +405,6 @@ def gameOver():
     pygame.quit()
     sys.exit(0)
 
- 
 if __name__ == '__main__':
     pygame.init()
     main_menu()
