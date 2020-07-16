@@ -90,7 +90,7 @@ def main():
     back_rect = scrolling_bg_image.get_rect()
 
     run = True
-    countDownToGameOver = 120 #frames
+    countDownToGameOver = 120 #frames to wait for gameover screen
     gameOverFlag = False
     score = 0
     fuel = 100
@@ -109,7 +109,7 @@ def main():
     lastShot = pygame.time.get_ticks()
     lastvelocity = [0,0]
     screen.blit(background_image, (0, 0))
-    pygame.mixer.music.play(-1) # -1 will ensure the song keeps looping
+    pygame.mixer.music.play(-1) # song loops forever
 
     def createExplosion (image, speed, col, row, onSprite):  
         explosionSound.play()
@@ -275,15 +275,16 @@ def main():
                     explosions.append (aExplosion)  
                     if deflector <100:
                         deflector+= 1                
-                    #spawnLittleAsteroids
+                    #spawn 4 smaller asteroids 
                     spawnlist = []
-                    for i in range (3):
+                    for i in range (4):
                         smallAsteroid = sh.SpriteSheet(smallAsteroidImg, 0, 1, 1, True, randintS(MAX_ROT_ASTEROID))
                         smallAsteroid.pos = [bigAsteroid.pos[0], bigAsteroid.pos[1]]
                         spawnlist.append (smallAsteroid)
                     spawnlist[0].vel = [-randint(1,3), -randint(1,3)]
                     spawnlist[1].vel = [-randint(1,3), randint(1,3)]
                     spawnlist[2].vel = [randint(1,3), randint(1,3)]
+                    spawnlist[3].vel = [randint(1,3), -randint(1,3)]
                     for sa in spawnlist:
                         smallAsteroids.append (sa)
                     bigAsteroids.remove(bigAsteroid)
