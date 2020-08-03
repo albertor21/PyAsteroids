@@ -7,16 +7,13 @@ class SpriteSheet:
     '''
     image : name of the sprite sheet image object
     speed : framerate ( if 0 display current frame)
-    frame : frame to be display
-    once: display anim once
+    cols, rows : columns and rows the sprite have
+    once: display animation once
     '''
-
-    #def __init__(self, filename, speed, cols, rows, once, velRot = 0, frame = 0):
     def __init__(self, image, speed, cols, rows, once, velRot = 0, frame = 0, onlyRow = -1):
         #pygame.sprite.Sprite.__init__(self)
-        #self.image = self.load_image(filename, True)
         self.image = image
-        self.rect = self.image.get_rect()      
+        self.rect = self.image.get_rect()
         self.speed = speed
         self.cols = cols #number of cols
         self.rows = rows #number of rows
