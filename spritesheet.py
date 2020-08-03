@@ -13,7 +13,7 @@ class SpriteSheet:
     def __init__(self, image, speed, cols, rows, once, velRot = 0, frame = 0, onlyRow = -1):
         #pygame.sprite.Sprite.__init__(self)
         self.image = image
-        self.rect = self.image.get_rect()
+        self.rect = self.image.get_rect()      
         self.speed = speed
         self.cols = cols #number of cols
         self.rows = rows #number of rows
@@ -23,16 +23,17 @@ class SpriteSheet:
         self.frameW = int(self.rect.width / cols)
         self.frameH = int (self.rect.height / rows)
         self.centerX = int(self.frameW / 2)
-        self.centerY = int (self.frameH / 2)
-        self.frame = frame #current frame (zero-based)
+        self.centerY = int (self.frameH / 2)    
         self.onlyRow = onlyRow
         if self.onlyRow > -1:
             self.setFrame (0, onlyRow) #select 1st col of onlyRow
-            self.lastFrame = cols-1 + (row * self.cols)
-            self.lastFrame = row * self.cols
+            self.lastFrame = cols-1 + ((self.onlyRow) * self.cols)
+            self.firstFrame = self.onlyRow * self.cols
+            self.frame = self.firstFrame        
         else:
             self.lastFrame = self.frames
             self.firstFrame = 0
+            self.frame = frame #current frame (zero-based)
         
         self.frameTemp = frame #(float) use to increase frame number according to speed
         self.frameImage = pygame.Surface ((self.frameW, self.frameH), flags=SRCALPHA) #current image frame
@@ -54,11 +55,11 @@ class SpriteSheet:
         #col and row are zero-based
         self.frame = col + (row * self.cols)
     
-    def setFrame(self, frame):
-        #frame is zero-based
-        if frame > self.frames - 1:
-            raise Exception("frame exceed max frames")
-        self.frame = frame
+    #def setFrame(self, frame):
+    #    #frame is zero-based
+    #    if frame > self.frames - 1:
+    #        raise Exception("frame exceed max frames")
+    #    self.frame = frame
         
     def blitRotate(self, screen, image, pos, originPos, angle):
         #https://stackoverflow.com/questions/4183208/how-do-i-rotate-an-image-around-its-center-using-pygame
@@ -101,7 +102,8 @@ class SpriteSheet:
             self.frameTemp = self.frameTemp + self.speed
             if (self.once and self.frameTemp >= self.lastFrame):
                 self.done = True
-            if self.frameTemp > self.lastFrame: self.frame = firstFrame
+            if self.frameTemp > self.lastFrame: 
+                self.frameTemp = self.firstFrame
             self.frame = round(self.frameTemp)
         #update rotation velocity
         if self.velRot != 0:
