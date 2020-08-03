@@ -5,16 +5,14 @@ import os, sys
 
 class SpriteSheet:
     '''
-    filename : name of the sprite sheet image file
+    image : name of the sprite sheet image object
     speed : framerate ( if 0 display current frame)
-    frames : number of frames
     frame : frame to be display
     once: display anim once
-    done: anim terminated
     '''
 
     #def __init__(self, filename, speed, cols, rows, once, velRot = 0, frame = 0):
-    def __init__(self, image, speed, cols, rows, once, velRot = 0, frame = 0):
+    def __init__(self, image, speed, cols, rows, once, velRot = 0, frame = 0, onlyRow = -1):
         #pygame.sprite.Sprite.__init__(self)
         #self.image = self.load_image(filename, True)
         self.image = image
@@ -30,6 +28,15 @@ class SpriteSheet:
         self.centerX = int(self.frameW / 2)
         self.centerY = int (self.frameH / 2)
         self.frame = frame #current frame (zero-based)
+        self.onlyRow = onlyRow
+        if self.onlyRow > -1:
+            self.setFrame (0, onlyRow) #select 1st col of onlyRow
+            self.lastFrame = cols-1 + (row * self.cols)
+            self.lastFrame = row * self.cols
+        else:
+            self.lastFrame = self.frames
+            self.firstFrame = 0
+        
         self.frameTemp = frame #(float) use to increase frame number according to speed
         self.frameImage = pygame.Surface ((self.frameW, self.frameH), flags=SRCALPHA) #current image frame
         self.angle = 0
@@ -95,9 +102,9 @@ class SpriteSheet:
         #update current frame 
         if self.speed > 0:
             self.frameTemp = self.frameTemp + self.speed
-            if (self.once and self.frameTemp >= self.frames):
+            if (self.once and self.frameTemp >= self.lastFrame):
                 self.done = True
-            if self.frameTemp > self.frames: _frame = 0
+            if self.frameTemp > self.lastFrame: self.frame = firstFrame
             self.frame = round(self.frameTemp)
         #update rotation velocity
         if self.velRot != 0:
