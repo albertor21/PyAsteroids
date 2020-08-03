@@ -12,18 +12,6 @@ class SpriteSheet:
     once: display anim once
     done: anim terminated
     '''
-    def load_image(self,filename, transparent=False):
-        try: 
-            filename = os.path.join (sys.path[0], filename)
-            image = pygame.image.load(filename).convert_alpha()
-        except pygame.error as message:   
-            print("Cannot load image: " + filename)
-            raise SystemExit(message) 
-    
-        if transparent:
-            color = image.get_at((0,0))
-            image.set_colorkey(color, RLEACCEL)
-        return image
 
     #def __init__(self, filename, speed, cols, rows, once, velRot = 0, frame = 0):
     def __init__(self, image, speed, cols, rows, once, velRot = 0, frame = 0):
@@ -60,7 +48,7 @@ class SpriteSheet:
         if col+1 > self.cols or row + 1 > self.rows:
             raise Exception("col or row exceed max cols or rows")
         #col and row are zero-based
-        self.frame = col + (row * self.rows)
+        self.frame = col + (row * self.cols)
     
     def setFrame(self, frame):
         #frame is zero-based
