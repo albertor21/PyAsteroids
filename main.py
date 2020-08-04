@@ -187,7 +187,7 @@ def main():
                 bigAsteroids.append (anAsteroid)
 
         #when not thrusting
-        ship.setFrame(0)
+        ship.setFrameNumber(0)
         ship.vel[0] *= 0.98
         ship.vel[1] *= 0.98
         
@@ -227,7 +227,7 @@ def main():
                 if distance([0,0], ship.vel) < MAX_VEL_SHIP : #vector modulo
                     ship.vel[0] = ship.vel[0] + acc[0]
                     ship.vel[1] = ship.vel[1] + acc[1] 
-                ship.setFrame(1)
+                ship.setFrameNumber(1)
                 thrustSound.play()
                 lastvelocity[0] = ship.vel[0]
                 lastvelocity[1] = ship.vel[1]

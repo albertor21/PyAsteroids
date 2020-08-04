@@ -26,7 +26,7 @@ class SpriteSheet:
         self.centerY = int (self.frameH / 2)    
         self.onlyRow = onlyRow
         if self.onlyRow > -1:
-            self.setFrame (0, onlyRow) #select 1st col of onlyRow
+            self.setFrameColRow (0, onlyRow) #select 1st col of onlyRow
             self.lastFrame = cols-1 + ((self.onlyRow) * self.cols)
             self.firstFrame = self.onlyRow * self.cols
             self.frame = self.firstFrame        
@@ -49,17 +49,17 @@ class SpriteSheet:
         self.acc = [0,0]
 
     #col and row are zero-based
-    def setFrame(self, col, row):
+    def setFrameColRow(self, col, row):
         if col+1 > self.cols or row + 1 > self.rows:
             raise Exception("col or row exceed max cols or rows")
         #col and row are zero-based
         self.frame = col + (row * self.cols)
     
-    #def setFrame(self, frame):
-    #    #frame is zero-based
-    #    if frame > self.frames - 1:
-    #        raise Exception("frame exceed max frames")
-    #    self.frame = frame
+    def setFrameNumber(self, frame):
+        #frame is zero-based
+        if frame > self.frames - 1:
+            raise Exception("frame exceed max frames")
+        self.frame = frame
         
     def blitRotate(self, screen, image, pos, originPos, angle):
         #https://stackoverflow.com/questions/4183208/how-do-i-rotate-an-image-around-its-center-using-pygame
