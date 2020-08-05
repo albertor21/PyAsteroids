@@ -6,15 +6,15 @@ import os, sys
 class SpriteSheet:
     '''
     image : name of the sprite sheet image object
-    speed : framerate ( if 0 display current frame)
+    animSpeed : framerate ( if 0 display current frame)
     cols, rows : columns and rows the sprite have
     once: display animation once
     '''
-    def __init__(self, image, speed, cols, rows, once, velRot = 0, frame = 0, onlyRow = -1):
+    def __init__(self, image, animSpeed, cols, rows, once, velRot = 0, frame = 0, onlyRow = -1):
         #pygame.sprite.Sprite.__init__(self)
         self.image = image
         self.rect = self.image.get_rect()      
-        self.speed = speed
+        self.animSpeed = animSpeed
         self.cols = cols #number of cols
         self.rows = rows #number of rows
         self.frames = cols * rows #number of frames
@@ -35,10 +35,10 @@ class SpriteSheet:
             self.firstFrame = 0
             self.frame = frame #current frame (zero-based)
         
-        self.frameTemp = frame #(float) use to increase frame number according to speed
+        self.frameTemp = self.frame #(float) use to increase frame number according to animSpeed
         self.frameImage = pygame.Surface ((self.frameW, self.frameH), flags=SRCALPHA) #current image frame
         self.angle = 0
-        #se hace una mascara con el frame 0 del spritesheet
+        #se hace una copia con el frame 0 del spritesheet
         rect_frame = (0 , 0, self.frameW, self.frameH)
         self.frameImage.fill ((0,0,0,0))
         self.frameImage.blit (self.image, (0,0), rect_frame) 
@@ -48,18 +48,27 @@ class SpriteSheet:
         self.vel = [0,0]
         self.acc = [0,0]
 
+    def setOnlyRow(self, onlyRow):
+        self.setFrameColRow (0, onlyRow) #select 1st col of onlyRow
+        self.lastFrame = self.cols-1 + (onlyRow * self.cols)
+        self.firstFrame = onlyRow * self.cols
+        self.frame = self.firstFrame
+        self.frameTemp = self.frame 
+
     #col and row are zero-based
     def setFrameColRow(self, col, row):
         if col+1 > self.cols or row + 1 > self.rows:
             raise Exception("col or row exceed max cols or rows")
         #col and row are zero-based
         self.frame = col + (row * self.cols)
+        self.frameTemp = self.frame
     
     def setFrameNumber(self, frame):
         #frame is zero-based
         if frame > self.frames - 1:
             raise Exception("frame exceed max frames")
         self.frame = frame
+        self.frameTemp = self.frame
         
     def blitRotate(self, screen, image, pos, originPos, angle):
         #https://stackoverflow.com/questions/4183208/how-do-i-rotate-an-image-around-its-center-using-pygame
@@ -98,8 +107,8 @@ class SpriteSheet:
                
     def update(self):  
         #update current frame 
-        if self.speed > 0:
-            self.frameTemp = self.frameTemp + self.speed
+        if self.animSpeed > 0:
+            self.frameTemp = self.frameTemp + self.animSpeed
             if (self.once and self.frameTemp >= self.lastFrame):
                 self.done = True
             if self.frameTemp > self.lastFrame: 
